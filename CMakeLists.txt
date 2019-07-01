@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.14)
+project(SDL_Game)
+set(CMAKE_CXX_STANDARD 14)
+include_directories(include)
+link_directories(lib)
+link_libraries(mingw32 SDL2main SDL2 SDL2_image)
+add_executable(SDL_Game src/main.cpp src/Game.cpp src/Game.h src/Entity.cpp src/Entity.h src/Component.cpp src/Component.h src/System.cpp src/System.h src/systems/RenderSystem.cpp src/systems/RenderSystem.h src/components/Visibility.cpp src/components/Visibility.h)
