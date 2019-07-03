@@ -20,7 +20,6 @@ class Entity {
         return id_counter++;
     }
 
-    bool active = true;
     EntityId id;
     std::bitset<ComponentType::LENGTH> componentsMask;
     std::array<Component *, ComponentType::LENGTH> components;
@@ -30,10 +29,6 @@ public:
     ~Entity() = default;
 
     EntityId getId() { return id; }
-
-    bool isActive() { return active; }
-
-    void destroy() { active = false; }
 
     bool hasComponents(uint64_t mask) { return (componentsMask.to_ullong() & mask) == mask; }
 

@@ -3,21 +3,40 @@
 //
 
 #include "Visibility.h"
-SDL_Texture *loadTexture(SDL_Renderer * renderer, const char *path) {
-    SDL_Surface *tmpSurface = IMG_Load(path);
-    SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, tmpSurface);
-    SDL_FreeSurface(tmpSurface);
-    return tex;
-}
-Visibility::Visibility(Entity *entity, SDL_Renderer *renderer, const char *path, SDL_Rect *dstR, SDL_Rect *srcR)
+
+Visibility::Visibility(Entity *entity, SDL_Renderer *renderer, const char *filePath, SDL_Rect *dstR)
         : Component(entity) {
-    texture = loadTexture(renderer, path);
     setDstRect(dstR);
-    setSrcRect(srcR);
+    loadTexture(renderer, filePath);
 }
 
 Visibility::~Visibility() {
     delete dstRect;
-    delete srcRect;
     SDL_DestroyTexture(texture);
+    SDL_FreeSurface(surface);
 }
+
+void Visibility::loadTexture(SDL_Renderer *renderer, const char *filePath) {
+    loadSurface(filePath);
+    reloadTexture(renderer);
+    if (dstRect) {
+        if (dstRect->w == 0)
+            dstRect->w = int((float(surface->w) / surface->h) * dstRect->h);
+        else if (dstRect->h == 0)
+            dstRect->h = int((float(surface->h) / surface->w) * dstRect->w);
+    }
+
+}
+
+void Visibility::reloadTexture(SDL_Renderer *renderer) {
+    texture = SDL_CreateTextureFromSurface(renderer, surface);
+}
+
+void Visibility::setPosition(int x, int y) {
+    if (dstRect != nullptr) {
+        dstRect->x = x;
+        dstRect->y = y;
+    }
+}
+
+

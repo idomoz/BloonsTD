@@ -1,0 +1,64 @@
+//
+// Created by Ido Mozes on 02/07/2019.
+//
+
+#ifndef SDL_GAME_VELOCITY_H
+#define SDL_GAME_VELOCITY_H
+
+#include <cmath>
+
+
+#include "../Component.h"
+
+class Velocity : public Component {
+    float X,Y;
+
+    inline void getAlphaAndR(float &alpha, float &R) {
+        alpha = atan2f(Y, X);
+        R = X / sinf(alpha);
+    }
+
+    inline void setXAndY(float alpha, float R) {
+        X = R * cosf(alpha);
+        Y = R * sinf(alpha);
+    }
+
+public:
+    static ComponentType getComponentType() { return ComponentType::VELOCITY; }
+
+    Velocity(Entity *entity, float x, float y);
+
+    ~Velocity() = default;
+
+    float getX() { return X; }
+
+    float getY() { return Y; }
+
+    void setVelocity(float x, float y) {
+        X = x;
+        Y = y;
+    }
+
+    void changeVelocity(float deltaX, float deltaY) {
+        X += deltaX;
+        Y += deltaY;
+    }
+
+    void turnDirection(float deltaDeg);
+
+    void setDirection(float deg);
+
+    void setSpeed(float speed);
+
+    void changeSpeed(float deltaSpeed);
+
+};
+
+class Acceleration : public Velocity {
+public:
+    static ComponentType getComponentType() { return ComponentType::ACCELERATION; }
+    Acceleration(Entity *entity, float x, float y):Velocity(entity,x,y){}
+    ~Acceleration()= default;
+};
+
+#endif //SDL_GAME_VELOCITY_H

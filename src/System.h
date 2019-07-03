@@ -8,6 +8,7 @@
 #include <vector>
 #include <cmath>
 #include "Entity.h"
+#include "GameData.h"
 
 constexpr uint64_t createMask( std::initializer_list<int> types) noexcept  {
     uint64_t mask = 0;
@@ -18,6 +19,6 @@ constexpr uint64_t createMask( std::initializer_list<int> types) noexcept  {
 }
 class System{
 public:
-    virtual void update(std::vector<std::unique_ptr<Entity>> &entities)=0;
+    virtual void update(std::vector<std::shared_ptr<Entity>> &entities, GameData & gameData)=0;
 };
 #endif //SDL2_GAME_SYSTEM_H

@@ -4,12 +4,15 @@
 
 #ifndef SDL2_GAME_COMPONENT_H
 #define SDL2_GAME_COMPONENT_H
-
+struct Point {
+    short X;
+    short Y;
+};
 
 class Entity;
 
 enum ComponentType {
-    POSITION, VISIBILITY,
+    VISIBILITY, POSITION, VELOCITY,SPEED, ACCELERATION, PATH_INDEX, HEALTH, KIND, TYPE, DAMAGE, PIERCE, SPREAD,
     LENGTH
 
 };
