@@ -18,7 +18,7 @@
 class SpawnSystem : public System {
     static uint64_t mask;
 public:
-    void update(std::vector<std::shared_ptr<Entity>> &entities, GameData &gameData) override;
+    void update(std::vector<std::shared_ptr<Entity>> *layers, GameData &gameData) override;
 };
 
 #endif //SDL_GAME_SPAWNSYSTEM_H

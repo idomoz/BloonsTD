@@ -4,7 +4,7 @@
 
 #ifndef SDL_GAME_GAMEDATA_H
 #define SDL_GAME_GAMEDATA_H
-
+constexpr int N_LAYERS = 2;
 #include <vector>
 #include <unordered_map>
 #include "Component.h"

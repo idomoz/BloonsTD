@@ -27,7 +27,7 @@
 
 class Game {
     std::vector<std::unique_ptr<System>> systems;
-    std::vector<std::shared_ptr<Entity>> entities;
+    std::vector<std::shared_ptr<Entity>> layers[N_LAYERS];
     RenderSystem renderSystem;
     GameData gameData;
 

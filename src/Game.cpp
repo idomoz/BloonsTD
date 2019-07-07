@@ -18,25 +18,37 @@ Game::Game(bool fullscreen, float mapScale) {
                 p.path().string().c_str());
     }
     gameData.assets["map"] = IMG_Load("../assets/map0.jpg");
+    gameData.assets["upgrade_bar"] = IMG_Load("../assets/upgrade_bar.jpg");
+    gameData.assets["menu"] = IMG_Load("../assets/menu.jpg");
     renderSystem.init(gameData);
     loadMap();
     auto mapEntity = new Entity();
-    mapEntity->addComponent<Visibility>(gameData.renderer, gameData.assets["map"]);
-    entities.emplace_back(mapEntity);
+    mapEntity->addComponent<Visibility>(gameData.renderer, gameData.assets["map"],
+                                        SDL_Rect{150, 0, gameData.assets["map"]->w, gameData.assets["map"]->h});
+    layers[0].emplace_back(mapEntity);
+    auto upgrade_bar = new Entity();
+    upgrade_bar->addComponent<Visibility>(gameData.renderer, gameData.assets["upgrade_bar"],
+                                        SDL_Rect{0, 0, gameData.assets["upgrade_bar"]->w, gameData.assets["upgrade_bar"]->h});
+    layers[1].emplace_back(upgrade_bar);
+    auto menu = new Entity();
+    menu->addComponent<Visibility>(gameData.renderer, gameData.assets["menu"],
+                                        SDL_Rect{685+150, 0, gameData.assets["menu"]->w, gameData.assets["menu"]->h});
+    layers[1].emplace_back(menu);
 
     auto s = new Entity();
-    s->addComponent<Sequence>(10, 60, 0);
-    s->addComponent<Kind>(std::string("Red"));
-    s->addComponent<Speed>(1);
-    entities.emplace_back(s);
-     s = new Entity();
-    s->addComponent<Sequence>(10, 60, 60*5);
+    s->addComponent<Sequence>(100, 10, 0);
+    s->addComponent<Kind>(std::string("Ceramic"));
+    s->addComponent<Speed>(3.5);
+    layers[0].emplace_back(s);
+    s = new Entity();
+    s->addComponent<Sequence>(100, 10, 60 * 5);
     s->addComponent<Kind>(std::string("Blue"));
     s->addComponent<Speed>(1.5);
-    entities.emplace_back(s);
+    layers[0].emplace_back(s);
 
     systems.emplace_back(new SpawnSystem);
     systems.emplace_back(new MovementSystem);
+    systems.emplace_back(&renderSystem);
 
 }
 
@@ -58,9 +70,8 @@ void Game::handleEvents() {
 
 void Game::update() {
     for (auto &system : systems) {
-        system->update(entities, gameData);
+        system->update(layers, gameData);
     }
-    renderSystem.update(entities, gameData);
 }
 
 void Game::loadMap() {

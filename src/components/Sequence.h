@@ -8,7 +8,7 @@
 #include <cmath>
 #include "../Component.h"
 
-#define SEQUENCE_FINISHED (-1)
+constexpr int SEQUENCE_FINISHED = -1;
 
 class Sequence : public Component {
     int amount;

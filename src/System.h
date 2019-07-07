@@ -19,6 +19,6 @@ constexpr uint64_t createMask( std::initializer_list<int> types) noexcept  {
 }
 class System{
 public:
-    virtual void update(std::vector<std::shared_ptr<Entity>> &entities, GameData & gameData)=0;
+    virtual void update(std::vector<std::shared_ptr<Entity>> *entities, GameData & gameData)=0;
 };
 #endif //SDL2_GAME_SYSTEM_H
