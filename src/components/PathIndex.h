@@ -11,10 +11,11 @@
 class PathIndex : public Component {
 public:
     int index;
+    float progress;
 
     static ComponentType getComponentType() { return ComponentType::PATH_INDEX; }
 
-    PathIndex(Entity *entity, int index) : Component(entity), index(index) {}
+    PathIndex(Entity *entity, int index) : Component(entity), index(index), progress(index) {}
 };
 
 #endif //SDL_GAME_PATHINDEX_H

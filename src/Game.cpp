@@ -3,24 +3,39 @@
 //
 
 #include <array>
+
 #include "Game.h"
 
+using namespace boost::filesystem;
 
 Game::Game(bool fullscreen, float mapScale) {
     gameData.mapScale = mapScale;
     gameData.fullscreen = fullscreen;
+    path p = path("../assets/Bloons");
+    directory_iterator it{p};
+    for (auto &p :it) {
+        gameData.assets[p.path().filename().string().substr(0, p.path().filename().string().length() - 4)] = IMG_Load(
+                p.path().string().c_str());
+    }
+    gameData.assets["map"] = IMG_Load("../assets/map0.jpg");
     renderSystem.init(gameData);
-    loadLevel();
+    loadMap();
     auto mapEntity = new Entity();
-    mapEntity->addComponent<Visibility>(renderSystem.getRenderer(), "../assets/level0.jpg");
+    mapEntity->addComponent<Visibility>(gameData.renderer, gameData.assets["map"]);
     entities.emplace_back(mapEntity);
 
-    auto player = new Entity();
-    player->addComponent<Visibility>(renderSystem.getRenderer(), "../assets/knight.png", new SDL_Rect{0, 0, 50, 0});
-    player->addComponent<Position>(gameData.startingPoint.X, gameData.startingPoint.Y);
-    player->addComponent<Speed>(10);
-    player->addComponent<PathIndex>(0);
-    entities.emplace_back(player);
+    auto s = new Entity();
+    s->addComponent<Sequence>(10, 60, 0);
+    s->addComponent<Kind>(std::string("Red"));
+    s->addComponent<Speed>(1);
+    entities.emplace_back(s);
+     s = new Entity();
+    s->addComponent<Sequence>(10, 60, 60*5);
+    s->addComponent<Kind>(std::string("Blue"));
+    s->addComponent<Speed>(1.5);
+    entities.emplace_back(s);
+
+    systems.emplace_back(new SpawnSystem);
     systems.emplace_back(new MovementSystem);
 
 }
@@ -48,9 +63,9 @@ void Game::update() {
     renderSystem.update(entities, gameData);
 }
 
-void Game::loadLevel() {
+void Game::loadMap() {
     gameData.path.clear();
-    std::string fileName = "../assets/level" + std::to_string(gameData.level);
+    std::string fileName = "../assets/map" + std::to_string(gameData.map);
     std::ifstream file(fileName + "_path.data", std::ios::binary);
     unsigned int length;
     file.read((char *) &gameData.startingPoint, 4);

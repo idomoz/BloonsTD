@@ -12,16 +12,12 @@
 
 class RenderSystem : public System {
     static uint64_t mask;
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
+
 public:
     RenderSystem() { SDL_Init(SDL_INIT_EVERYTHING); }
 
-    ~RenderSystem();
 
     void init(GameData &gameData);
-
-    SDL_Renderer *getRenderer() { return renderer; }
 
     void update(std::vector<std::shared_ptr<Entity>> &entities , GameData & gameData) override;
 };

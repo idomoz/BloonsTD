@@ -5,7 +5,7 @@
 #include "MovementSystem.h"
 
 
-void MovementSystem::update(std::vector<std::shared_ptr<Entity>> &entities,  GameData & gameData) {
+void MovementSystem::update(std::vector<std::shared_ptr<Entity>> &entities, GameData &gameData) {
     for (auto &entity: entities) {
         // Move all entities with Visibility and Position
         if (entity->hasComponents(createMask({ComponentType::VISIBILITY, ComponentType::POSITION}))) {
@@ -20,46 +20,49 @@ void MovementSystem::update(std::vector<std::shared_ptr<Entity>> &entities,  Gam
                 }
                 deltaX = velocity.getX();
                 deltaY = velocity.getY();
+
             } else if (entity->hasComponents(createMask({ComponentType::PATH_INDEX, ComponentType::SPEED}))) {
                 auto &pathIndex = entity->getComponent<PathIndex>();
                 auto &speed = entity->getComponent<Speed>();
-                for (int i = 0; i < speed.speed; ++i) {
+                pathIndex.progress += speed.speed;
+                float deltaIndex = pathIndex.progress - pathIndex.index;
+                while (deltaIndex >= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2))) {
                     switch (gameData.path[pathIndex.index]) {
                         case 0:
                             deltaX += 1;
                             break;
                         case 1:
-                            deltaX += sqrt(0.5);
-                            deltaY += sqrt(0.5);
+                            deltaX += 1;
+                            deltaY += 1;
                             break;
                         case 2:
                             deltaY += 1;
                             break;
                         case 3:
-                            deltaX += -sqrt(0.5);
-                            deltaY += sqrt(0.5);
+                            deltaX += -1;
+                            deltaY += 1;
                             break;
                         case 4:
                             deltaX += -1;
                             break;
                         case 5:
-                            deltaX += -sqrt(0.5);
-                            deltaY += -sqrt(0.5);
+                            deltaX += -1;
+                            deltaY += -1;
                             break;
                         case 6:
                             deltaY += -1;
                             break;
                         case 7:
-                            deltaX += sqrt(0.5);
-                            deltaY += -sqrt(0.5);
+                            deltaX += 1;
+                            deltaY += -1;
                             break;
                     }
+                    deltaIndex -= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2));
                     if (pathIndex.index < gameData.path.size() - 1)
                         pathIndex.index++;
                 }
             }
-            position.changePosition(deltaX * gameData.mapScale, deltaY * gameData.mapScale);
-            visibility.setPosition(int(position.getX()), int(position.getY()));
+            position.changePosition(deltaX , deltaY);
         }
     }
 }

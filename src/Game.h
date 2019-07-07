@@ -12,15 +12,18 @@
 
 #include "SDL.h"
 #include "SDL_image.h"
-
+#include <comdef.h>
 #include "Entity.h"
 #include "System.h"
 #include "systems/RenderSystem.h"
 #include "systems/MovementSystem.h"
+#include "systems/SpawnSystem.h"
 #include "components/Visibility.h"
 #include "components/PathIndex.h"
 #include "components/Speed.h"
 #include "GameData.h"
+#include "boost/filesystem.hpp"
+#include <iostream>
 
 class Game {
     std::vector<std::unique_ptr<System>> systems;
@@ -40,7 +43,7 @@ public:
 
 
     bool running() { return gameData.isRunning; }
-    void loadLevel();
+    void loadMap();
 };
 
 #endif //SDL2_GAME_GAME_H

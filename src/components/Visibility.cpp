@@ -4,20 +4,18 @@
 
 #include "Visibility.h"
 
-Visibility::Visibility(Entity *entity, SDL_Renderer *renderer, const char *filePath, SDL_Rect *dstR)
-        : Component(entity) {
-    setDstRect(dstR);
-    loadTexture(renderer, filePath);
+Visibility::Visibility(Entity *entity, SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR)
+        : Component(entity), dstRect(dstR) {
+    loadTexture(renderer, newSurface);
 }
 
 Visibility::~Visibility() {
-    delete dstRect;
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }
 
-void Visibility::loadTexture(SDL_Renderer *renderer, const char *filePath) {
-    loadSurface(filePath);
+void Visibility::loadTexture(SDL_Renderer *renderer, SDL_Surface *newSurface) {
+    surface = newSurface;
     reloadTexture(renderer);
     if (dstRect) {
         if (dstRect->w == 0)
@@ -33,7 +31,7 @@ void Visibility::reloadTexture(SDL_Renderer *renderer) {
 }
 
 void Visibility::setPosition(int x, int y) {
-    if (dstRect != nullptr) {
+    if (dstRect) {
         dstRect->x = x;
         dstRect->y = y;
     }
