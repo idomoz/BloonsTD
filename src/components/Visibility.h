@@ -20,7 +20,7 @@ class Visibility : public Component {
     std::optional<float> radios;
 
 public:
-    static constexpr inline ComponentType getComponentType() { return ComponentType::VISIBILITY; }
+    static constexpr ComponentType type = ComponentType::VISIBILITY;
 
     Visibility(Entity *entity, SDL_Renderer *renderer, SDL_Surface *newSurface,
                std::optional<SDL_Rect> dstR = std::nullopt, std::optional<float> radios = std::nullopt);

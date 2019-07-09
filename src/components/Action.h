@@ -15,11 +15,11 @@ class Action : public Component {
 
 public:
     bool disabled;
-    ActionType type;
+    ActionType actionType;
 
-    static ComponentType getComponentType() { return ComponentType::ACTION; }
+    static constexpr ComponentType type = ComponentType::ACTION;
 
-    Action(Entity *entity, ActionType type, bool disabled = false) : Component(entity), type(type),
+    Action(Entity *entity, ActionType actionType, bool disabled = false) : Component(entity), actionType(actionType),
                                                                            disabled(disabled) {}
 };
 

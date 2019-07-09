@@ -12,7 +12,7 @@ class Speed : public Component {
 public:
     float speed;
 
-    static ComponentType getComponentType() { return ComponentType::SPEED; }
+    static constexpr ComponentType type = ComponentType::SPEED;
 
     Speed(Entity *entity, float speed) : Component(entity), speed(speed) {}
 };

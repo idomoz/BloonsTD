@@ -17,7 +17,7 @@ class Sequence : public Component {
     int amountReady;
 
 public:
-    static ComponentType getComponentType() { return ComponentType::SEQUENCE; }
+    static constexpr ComponentType type = ComponentType::SEQUENCE;
 
     Sequence(Entity *entity, int amount, float interval, float delay) : Component(entity), amount(amount),
                                                                         interval(interval),

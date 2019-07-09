@@ -33,16 +33,16 @@ public:
 
     template<class ... T>
     std::optional<std::tuple<T &...>> getComponents() {
-        uint64_t mask = createMask({T::getComponentType()...});
+        constexpr uint64_t mask = createMask({T::type...});
         if ((componentsMask.to_ullong() & mask) == mask) {
-            return std::tuple<T &...>((*(T *) components[T::getComponentType()].get())...);
+            return std::tuple<T &...>((*(T *) components[T::type].get())...);
         }
         return std::nullopt;
     }
 
     template<class T>
     T * getComponent() {
-        if (auto &c =components[T::getComponentType()])
+        if (auto &c =components[T::type])
             return (T*)c.get();
         return nullptr;
     }
@@ -50,15 +50,15 @@ public:
     template<typename T, typename ... Targs>
     Component &addComponent(Targs &&... args) {
         T *c = new T(this, std::forward<Targs>(args)...);
-        components[T::getComponentType()] = std::move(std::unique_ptr<Component>(c));
-        componentsMask[T::getComponentType()] = true;
+        components[T::type] = std::move(std::unique_ptr<Component>(c));
+        componentsMask[T::type] = true;
         return *c;
     }
 
     template<typename T>
     void removeComponent() {
-        components[T::getComponentType()].release();
-        componentsMask[T::getComponentType()] = false;
+        components[T::type].release();
+        componentsMask[T::type] = false;
     }
 
 };

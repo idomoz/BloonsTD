@@ -13,7 +13,7 @@ public:
     int index;
     float progress;
 
-    static ComponentType getComponentType() { return ComponentType::PATH_INDEX; }
+    static constexpr ComponentType type = ComponentType::PATH_INDEX;
 
     PathIndex(Entity *entity, int index) : Component(entity), index(index), progress(index) {}
 };

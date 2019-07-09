@@ -10,7 +10,7 @@ enum Types{
 };
 class Type: public Component{
 public:
-    static ComponentType getComponentType() { return ComponentType::TYPE; }
+    static constexpr ComponentType type = ComponentType::TYPE;
     Type(Entity *entity):Component(entity){}
 };
 #endif //SDL_GAME_TYPE_H

@@ -13,7 +13,7 @@ class Kind : public Component {
 
 public:
     std::string kind;
-    static ComponentType getComponentType() { return ComponentType::KIND; }
+    static constexpr ComponentType type = ComponentType::KIND;
 
     Kind(Entity *entity, std::string kind) : Component(entity), kind(std::move(kind)) {}
     Kind(Entity *entity, Kind& kind) : Component(entity), kind(kind.kind) {}

@@ -2,6 +2,6 @@
 
 class __: public Component{
 public:
-    static ComponentType getComponentType() { return ComponentType::__; }
+    static constexpr ComponentType type = ComponentType::__;
     __(Entity *entity):Component(entity){}
 };

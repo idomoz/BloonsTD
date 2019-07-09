@@ -24,7 +24,7 @@ class Velocity : public Component {
     }
 
 public:
-    static ComponentType getComponentType() { return ComponentType::VELOCITY; }
+    static constexpr ComponentType type = ComponentType::VELOCITY;
 
     Velocity(Entity *entity, float x, float y);
 
@@ -56,7 +56,7 @@ public:
 
 class Acceleration : public Velocity {
 public:
-    static ComponentType getComponentType() { return ComponentType::ACCELERATION; }
+    static constexpr ComponentType type = ComponentType::ACCELERATION;
     Acceleration(Entity *entity, float x, float y):Velocity(entity,x,y){}
     ~Acceleration()= default;
 };

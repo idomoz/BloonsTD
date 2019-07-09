@@ -9,7 +9,7 @@
 class Draggable: public Component{
 public:
     bool isPlaceable = false;
-    static ComponentType getComponentType() { return ComponentType::DRAGGABLE; }
+    static constexpr ComponentType type = ComponentType::DRAGGABLE;
     Draggable(Entity *entity):Component(entity){}
 };
 #endif //SDL_GAME_DRAGGABLE_H

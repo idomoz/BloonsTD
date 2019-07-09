@@ -26,7 +26,7 @@ void EventSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData 
                     for (auto &entity: layers[i]) {
                         if (auto components = entity->getComponents<Action,Visibility>()) {
                             auto [action,visibility] = components.value();
-                            if (action.disabled or (action.type == DRAG and gameData.isDragging))
+                            if (action.disabled or (action.actionType == DRAG and gameData.isDragging))
                                 continue;
                             int entityX, entityY, w, h;
                             entityX = visibility.getDstRect()->x;
@@ -44,7 +44,7 @@ void EventSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData 
 
                             if (entityX <= mouseX and mouseX <= entityX + w and entityY <= mouseY and
                                 mouseY <= entityY + h) {
-                                switch (action.type) {
+                                switch (action.actionType) {
                                     case DRAG: {
                                         auto &kind = *entity->getComponent<Kind>();
                                         auto draggable = new Entity();

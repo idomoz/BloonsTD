@@ -10,7 +10,7 @@
 class Position : public Component {
     float X, Y;
 public:
-    static ComponentType getComponentType() { return ComponentType::POSITION; }
+    static constexpr ComponentType type = ComponentType::POSITION;
 
     Position(Entity *entity, float x, float y) : Component(entity), X(x), Y(y) {};
 
