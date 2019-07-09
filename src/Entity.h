@@ -7,41 +7,60 @@
 
 #include <bitset>
 #include <vector>
+#include <cmath>
 #include <memory>
+#include <optional>
 #include "Component.h"
 
-constexpr int maxComponents = 64;
-typedef std::size_t EntityId;
-
+constexpr uint64_t createMask(std::initializer_list<int> types) noexcept {
+    uint64_t mask = 0;
+    for (int bit : types) {
+        mask |= (uint64_t) pow(2, bit);
+    }
+    return mask;
+}
 
 class Entity {
-    static EntityId getNewId() {
-        static EntityId id_counter = 0;
-        return id_counter++;
+
+    std::bitset<ComponentType::LENGTH> componentsMask;
+    std::unique_ptr<Component> components[ComponentType::LENGTH];
+public:
+
+//    bool hasComponents(uint64_t mask) { return (componentsMask.to_ullong() & mask) == mask; }
+
+//    template<class T>
+//    T &getComponent() { return *(T *) (components[T::getComponentType()].get()); }
+
+    template<class ... T>
+    std::optional<std::tuple<T &...>> getComponents() {
+        uint64_t mask = createMask({T::getComponentType()...});
+        if ((componentsMask.to_ullong() & mask) == mask) {
+            return std::tuple<T &...>((*(T *) components[T::getComponentType()].get())...);
+        }
+        return std::nullopt;
     }
 
-    EntityId id;
-    std::bitset<ComponentType::LENGTH> componentsMask;
-    std::array<Component *, ComponentType::LENGTH> components;
-public:
-    Entity();
-
-    ~Entity() = default;
-
-    EntityId getId() { return id; }
-
-    bool hasComponents(uint64_t mask) { return (componentsMask.to_ullong() & mask) == mask; }
-
     template<class T>
-    T &getComponent() { return *(T *) (components[T::getComponentType()]); }
+    T * getComponent() {
+        if (auto &c =components[T::getComponentType()])
+            return (T*)c.get();
+        return nullptr;
+    }
 
     template<typename T, typename ... Targs>
-    Component &addComponent(Targs &&... args){
+    Component &addComponent(Targs &&... args) {
         T *c = new T(this, std::forward<Targs>(args)...);
-        components[T::getComponentType()] = c;
+        components[T::getComponentType()] = std::move(std::unique_ptr<Component>(c));
         componentsMask[T::getComponentType()] = true;
         return *c;
     }
+
+    template<typename T>
+    void removeComponent() {
+        components[T::getComponentType()].release();
+        componentsMask[T::getComponentType()] = false;
+    }
+
 };
 
 #endif //SDL2_GAME_ENTITY_H

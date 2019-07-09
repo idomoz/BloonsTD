@@ -9,14 +9,17 @@
 #include <cmath>
 #include "Entity.h"
 #include "GameData.h"
+#include "components/Sequence.h"
+#include "components/Speed.h"
+#include "components/Kind.h"
+#include "components/Position.h"
+#include "components/Visibility.h"
+#include "components/PathIndex.h"
+#include "components/Velocity.h"
+#include "components/Draggable.h"
+#include "components/Action.h"
 
-constexpr uint64_t createMask( std::initializer_list<int> types) noexcept  {
-    uint64_t mask = 0;
-    for (int bit : types) {
-        mask |= (uint64_t) pow(2, bit);
-    }
-    return mask;
-}
+
 class System{
 public:
     virtual void update(std::vector<std::shared_ptr<Entity>> *entities, GameData & gameData)=0;

@@ -6,6 +6,7 @@
 #define SDL2_GAME_GAME_H
 
 #include <iostream>
+#include <cmath>
 #include <fstream>
 #include <memory>
 #include <vector>
@@ -17,10 +18,9 @@
 #include "System.h"
 #include "systems/RenderSystem.h"
 #include "systems/MovementSystem.h"
+#include "systems/EventSystem.h"
 #include "systems/SpawnSystem.h"
-#include "components/Visibility.h"
-#include "components/PathIndex.h"
-#include "components/Speed.h"
+#include "systems/DraggingSystem.h"
 #include "GameData.h"
 #include "boost/filesystem.hpp"
 #include <iostream>
@@ -28,7 +28,7 @@
 class Game {
     std::vector<std::unique_ptr<System>> systems;
     std::vector<std::shared_ptr<Entity>> layers[N_LAYERS];
-    RenderSystem renderSystem;
+    RenderSystem * renderSystem;
     GameData gameData;
 
 
@@ -37,10 +37,7 @@ public:
 
     ~Game();
 
-    void handleEvents();
-
     void update();
-
 
     bool running() { return gameData.isRunning; }
     void loadMap();

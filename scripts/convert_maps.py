@@ -8,18 +8,21 @@ image = Image.open(argv[1] + "_obstacles.bmp")
 width, height = image.size
 obstacles = b''
 byte = 0
-i = 7
-for i, pixel in enumerate(image.getdata()):
-    byte += 2 ** (i % 8) * (pixel == (0, 0, 0))
-    if i % 8 == 7:
-        obstacles += bytes([byte])
-        byte = 0
+i = 0
+for y in range(height):
+    for x in range(width):
+        pixel = image.getpixel((x, y))
+        byte |= (2 ** (i % 8)) * (pixel == (0, 0, 0))
+        print(i,pixel,byte)
+        _=input()
+        if i % 8 == 7:
+            obstacles += bytes([byte])
+            byte = 0
+        i += 1
 if i % 8 != 7:
     obstacles += bytes([byte])
 
 with open(argv[1] + "_obstacles.data", 'wb') as file:
-    file.write(pack('<H', width))
-    file.write(pack('<H', height))
     file.write(obstacles)
 
 # path
@@ -32,7 +35,6 @@ for i, pixel in enumerate(image.getdata()):
         break
 start_loc_x = x = i % width
 start_loc_y = y = i // width
-# print(x, y)
 prev_x = prev_y = next_x = next_y = 0
 pixels = image.load()
 pixel = pixels[x, y]
@@ -66,9 +68,6 @@ while pixel != (255, 255, 0):
     if (next_x, next_y) in prev_locations:
         prev_locations.remove((next_x, next_y))
     prev_locations.append((next_x, next_y))
-    # print(next_x, next_y)
-    # print(arrows[mask])
-    # _ = input()
     instructions += bytes([mask])
     prev_x = x
     prev_y = y

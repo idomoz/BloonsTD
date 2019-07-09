@@ -16,6 +16,7 @@ public:
     static ComponentType getComponentType() { return ComponentType::KIND; }
 
     Kind(Entity *entity, std::string kind) : Component(entity), kind(std::move(kind)) {}
+    Kind(Entity *entity, Kind& kind) : Component(entity), kind(kind.kind) {}
 };
 
 #endif //SDL_GAME_KIND_H

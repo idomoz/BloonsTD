@@ -4,7 +4,3 @@
 
 #include "Entity.h"
 
-Entity::Entity():componentsMask() ,components(){
-    id = getNewId();
-}
-

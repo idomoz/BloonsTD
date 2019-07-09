@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
     Game game(false, 1.5);
     while (game.running()) {
         frameStart = SDL_GetTicks();
-        game.handleEvents();
+
         game.update();
         frameTime = SDL_GetTicks() - frameStart;
         if (frameDelay > frameTime) {

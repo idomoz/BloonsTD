@@ -4,14 +4,13 @@
 
 #include "Visibility.h"
 
-Visibility::Visibility(Entity *entity, SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR)
-        : Component(entity), dstRect(dstR) {
+Visibility::Visibility(Entity *entity, SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR,
+                       std::optional<float> radios) : Component(entity), dstRect(dstR), radios(radios) {
     loadTexture(renderer, newSurface);
 }
 
 Visibility::~Visibility() {
     SDL_DestroyTexture(texture);
-    SDL_FreeSurface(surface);
 }
 
 void Visibility::loadTexture(SDL_Renderer *renderer, SDL_Surface *newSurface) {

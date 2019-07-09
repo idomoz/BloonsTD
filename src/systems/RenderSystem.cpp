@@ -7,45 +7,57 @@
 #include "../components/Position.h"
 
 
-uint64_t RenderSystem::mask = createMask({ComponentType::VISIBILITY});
-
-
 void RenderSystem::init(GameData &gameData) {
     if (gameData.window != nullptr)
         SDL_DestroyWindow(gameData.window);
     if (gameData.renderer != nullptr)
         SDL_DestroyRenderer(gameData.renderer);
     gameData.window = SDL_CreateWindow("BloonsTD", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                       (685 + 400) * gameData.mapScale,
-                                       511 * gameData.mapScale, gameData.fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+                                       (MAP_WIDTH + SIDEBAR_WIDTH + MENU_WIDTH) * gameData.mapScale,
+                                       MAP_HEIGHT * gameData.mapScale, gameData.fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
     gameData.renderer = SDL_CreateRenderer(gameData.window, -1, 0);
     SDL_SetRenderDrawColor(gameData.renderer, 255, 255, 255, 255);
 }
 
 void RenderSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData &gameData) {
+
     SDL_RenderClear(gameData.renderer);
     for (int i = 0; i < N_LAYERS; ++i) {
         for (auto &entity: layers[i]) {
-            if (entity->hasComponents(mask)) {
-                auto &visibility = entity->getComponent<Visibility>();
+            if (auto visibilityP = entity->getComponent<Visibility>()) {
+                auto &visibility = *visibilityP;
+                auto positionP = entity->getComponent<Position>();
                 SDL_Rect r = {int(visibility.getDstRect()->x * gameData.mapScale),
                               int(visibility.getDstRect()->y * gameData.mapScale),
                               int(visibility.getDstRect()->w * gameData.mapScale),
                               int(visibility.getDstRect()->h * gameData.mapScale)};
-                if (entity->hasComponents(createMask({ComponentType::POSITION}))) {
-                    if (entity->hasComponents(createMask({ComponentType::POSITION}))) {
-                        auto &position = entity->getComponent<Position>();
-                        r.x = int(position.getX() * gameData.mapScale);
-                        r.y = int(position.getY() * gameData.mapScale);
-                    }
-                    r.x -= int(r.w / 2.0);
-                    r.y -= int(r.h / 2.0);
-                    r.x += int(150 * gameData.mapScale);
+                if (positionP) {
+                    auto &position = *positionP;
+                    r.x = int((position.getX() + SIDEBAR_WIDTH) * gameData.mapScale -r.w / 2.0);
+                    r.y = int(position.getY() * gameData.mapScale -r.h / 2.0);
                 }
                 SDL_RenderCopy(gameData.renderer, visibility.getTexture(), nullptr, &r);
+                if (visibility.getRadios() != NO_RADIOS) {
+                    int entityX, entityY;
+                    if (positionP) {
+                        entityX = r.x;
+                        entityY = r.y;
+                    } else {
+                        entityX = r.x + int((visibility.getDstRect()->w / 2.0) * gameData.mapScale);
+                        entityY = r.y + int((visibility.getDstRect()->h / 2.0) * gameData.mapScale);
+                    }
+                    auto draggableP = entity->getComponent<Draggable>();
+                    bool isRed = draggableP ? !draggableP->isPlaceable : false;
+                    filledCircleRGBA(gameData.renderer, entityX, entityY, visibility.getRadios(), isRed ? 255 : 0, 0, 0,
+                                     100);
+                    aacircleRGBA(gameData.renderer, entityX, entityY, visibility.getRadios(), isRed ? 255 : 0, 0, 0,
+                                 150);
+
+                }
             }
         }
     }
+
     SDL_RenderPresent(gameData.renderer);
 }
 

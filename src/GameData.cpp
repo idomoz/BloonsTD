@@ -4,6 +4,9 @@
 #include "GameData.h"
 
 GameData::~GameData() {
+    for(auto & item:assets){
+        SDL_FreeSurface(item.second);
+    }
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
 }
