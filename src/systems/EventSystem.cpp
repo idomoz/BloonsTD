@@ -5,7 +5,7 @@
 #include "EventSystem.h"
 
 
-void EventSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData &gameData) {
+void EventSystem::update(Entities *layers, GameData &gameData) {
 
     SDL_PumpEvents();
     SDL_Event event;
@@ -16,17 +16,17 @@ void EventSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData 
                 break;
             }
             case SDL_MOUSEBUTTONDOWN: {
-                std::vector<std::shared_ptr<Entity>> newEntities;
-                std::vector<std::shared_ptr<Entity>> entitiesToRemove;
+                Entities newEntities;
+//                Entities entitiesToRemove;
                 int mouseX, mouseY, originalMouseX;
                 SDL_GetMouseState(&mouseX, &mouseY);
                 mouseX = originalMouseX = int(mouseX / gameData.mapScale);
                 mouseY = int(mouseY / gameData.mapScale);
                 for (int i = N_LAYERS - 1; i >= 0; --i) {
                     for (auto &entity: layers[i]) {
-                        if (auto components = entity->getComponents<Action,Visibility>()) {
-                            auto [action,visibility] = components.value();
-                            if (action.disabled or (action.actionType == DRAG and gameData.isDragging))
+                        if (auto components = entity->getComponents<Action, Visibility>()) {
+                            auto[action, visibility] = components.value();
+                            if (action.disabled or (action.actionType != DROP and gameData.isDragging))
                                 continue;
                             int entityX, entityY, w, h;
                             entityX = visibility.getDstRect()->x;
@@ -34,7 +34,7 @@ void EventSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData 
                             w = visibility.getDstRect()->w;
                             h = visibility.getDstRect()->h;
 
-                            if (auto positionP=entity->getComponent<Position>()) {
+                            if (auto positionP = entity->getComponent<Position>()) {
                                 auto &position = *positionP;
                                 entityX = int(position.getX() - w / 2.0);
                                 entityY = int(position.getY() - h / 2.0);
@@ -61,15 +61,17 @@ void EventSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData 
                                     }
 
                                     case CLICK: {
+
                                         goto entityClicked;
                                     }
                                     case DROP: {
                                         auto &draggable = *entity->getComponent<Draggable>();
                                         if (draggable.isPlaceable) {
                                             entity->removeComponent<Draggable>();
+                                            entity->getComponent<Action>()->actionType = CLICK;
                                             gameData.isDragging = false;
                                         }
-                                        break;
+                                        goto entityClicked;
                                     }
                                 }
 
@@ -78,8 +80,7 @@ void EventSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData 
                     }
                 }
                 entityClicked:
-                layers[3].insert(layers[3].end(), std::make_move_iterator(newEntities.begin()),
-                                 std::make_move_iterator(newEntities.end()));
+                layers[3] += newEntities;
                 break;
             }
             default:

@@ -4,6 +4,7 @@
 
 #ifndef SDL2_GAME_SYSTEM_H
 #define SDL2_GAME_SYSTEM_H
+
 #include <initializer_list>
 #include <vector>
 #include <cmath>
@@ -19,9 +20,17 @@
 #include "components/Draggable.h"
 #include "components/Action.h"
 
+typedef std::vector<std::shared_ptr<Entity>> Entities;
 
-class System{
+inline void
+operator+=(Entities &originalVector, Entities &newVector) {
+    originalVector.insert(originalVector.end(), std::make_move_iterator(newVector.begin()),
+                          std::make_move_iterator(newVector.end()));
+}
+
+class System {
 public:
-    virtual void update(std::vector<std::shared_ptr<Entity>> *entities, GameData & gameData)=0;
+    virtual void update(Entities *entities, GameData &gameData) = 0;
 };
+
 #endif //SDL2_GAME_SYSTEM_H

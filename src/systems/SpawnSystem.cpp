@@ -5,13 +5,13 @@
 #include "SpawnSystem.h"
 
 
-void SpawnSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData &gameData) {
+void SpawnSystem::update(Entities *layers, GameData &gameData) {
     for (int i = 0; i < N_LAYERS; ++i) {
-        std::vector<std::shared_ptr<Entity>> newEntities;
+        Entities newEntities;
         for (auto &entity: layers[i]) {
             if (auto components = entity->getComponents<Sequence, Kind, Speed>()) {
                 auto[sequence, kind, speed] = components.value();
-                int amount =sequence.getAmountReady();
+                int amount = sequence.getAmountReady();
                 for (int j = 0; j < amount; ++j) {
                     auto *newEntity = new Entity();
                     newEntity->addComponent<Kind>(kind);
@@ -26,7 +26,6 @@ void SpawnSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData 
                 }
             }
         }
-        layers[i].insert(layers[i].end(), std::make_move_iterator(newEntities.begin()),
-                         std::make_move_iterator(newEntities.end()));
+        layers[i] += newEntities;
     }
 }

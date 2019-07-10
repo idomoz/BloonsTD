@@ -17,6 +17,7 @@ public:
 
     Kind(Entity *entity, std::string kind) : Component(entity), kind(std::move(kind)) {}
     Kind(Entity *entity, Kind& kind) : Component(entity), kind(kind.kind) {}
+    ~Kind() override = default;
 };
 
 #endif //SDL_GAME_KIND_H

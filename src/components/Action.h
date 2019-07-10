@@ -21,6 +21,8 @@ public:
 
     Action(Entity *entity, ActionType actionType, bool disabled = false) : Component(entity), actionType(actionType),
                                                                            disabled(disabled) {}
+
+    ~Action() override = default;
 };
 
 #endif //SDL_GAME_ACTION_H

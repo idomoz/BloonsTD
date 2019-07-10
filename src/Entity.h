@@ -26,11 +26,6 @@ class Entity {
     std::unique_ptr<Component> components[ComponentType::LENGTH];
 public:
 
-//    bool hasComponents(uint64_t mask) { return (componentsMask.to_ullong() & mask) == mask; }
-
-//    template<class T>
-//    T &getComponent() { return *(T *) (components[T::getComponentType()].get()); }
-
     template<class ... T>
     std::optional<std::tuple<T &...>> getComponents() {
         constexpr uint64_t mask = createMask({T::type...});
@@ -41,9 +36,9 @@ public:
     }
 
     template<class T>
-    T * getComponent() {
-        if (auto &c =components[T::type])
-            return (T*)c.get();
+    T *getComponent() {
+        if (auto &c = components[T::type])
+            return (T *) c.get();
         return nullptr;
     }
 

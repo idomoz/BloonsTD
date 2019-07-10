@@ -14,7 +14,7 @@ public:
 
     Position(Entity *entity, float x, float y) : Component(entity), X(x), Y(y) {};
 
-    ~Position() = default;
+    ~Position() override= default;
 
     float getX() { return X; }
 

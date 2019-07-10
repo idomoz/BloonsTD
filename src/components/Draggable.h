@@ -11,5 +11,6 @@ public:
     bool isPlaceable = false;
     static constexpr ComponentType type = ComponentType::DRAGGABLE;
     Draggable(Entity *entity):Component(entity){}
+    ~Draggable() override = default;
 };
 #endif //SDL_GAME_DRAGGABLE_H

@@ -20,7 +20,7 @@ public:
 
     void init(GameData &gameData);
 
-    void update(std::vector<std::shared_ptr<Entity>> *layers , GameData & gameData) override;
+    void update(Entities *layers , GameData & gameData) override;
 };
 
 #endif //SDL2_GAME_RENDERSYSTEM_H

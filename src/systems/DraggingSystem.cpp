@@ -6,7 +6,7 @@
 
 
 
-void DraggingSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData &gameData) {
+void DraggingSystem::update(Entities *layers, GameData &gameData) {
 
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);

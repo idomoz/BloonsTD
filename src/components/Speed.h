@@ -15,6 +15,7 @@ public:
     static constexpr ComponentType type = ComponentType::SPEED;
 
     Speed(Entity *entity, float speed) : Component(entity), speed(speed) {}
+    ~Speed() override = default;
 };
 
 #endif //SDL_GAME_SPEED_H

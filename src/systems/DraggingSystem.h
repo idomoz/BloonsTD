@@ -8,6 +8,6 @@
 #include "../System.h"
 class DraggingSystem : public System {
 public:
-    void update(std::vector<std::shared_ptr<Entity>> *layers, GameData &gameData) override;
+    void update(Entities *layers, GameData &gameData) override;
 };
 #endif //SDL_GAME_DRAGGINGSYSTEM_H

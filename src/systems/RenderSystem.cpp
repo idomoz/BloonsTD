@@ -19,7 +19,7 @@ void RenderSystem::init(GameData &gameData) {
     SDL_SetRenderDrawColor(gameData.renderer, 255, 255, 255, 255);
 }
 
-void RenderSystem::update(std::vector<std::shared_ptr<Entity>> *layers, GameData &gameData) {
+void RenderSystem::update(Entities *layers, GameData &gameData) {
 
     SDL_RenderClear(gameData.renderer);
     for (int i = 0; i < N_LAYERS; ++i) {

@@ -12,5 +12,6 @@ class Type: public Component{
 public:
     static constexpr ComponentType type = ComponentType::TYPE;
     Type(Entity *entity):Component(entity){}
+    ~Type() override = default;
 };
 #endif //SDL_GAME_TYPE_H

@@ -16,6 +16,7 @@ public:
     static constexpr ComponentType type = ComponentType::PATH_INDEX;
 
     PathIndex(Entity *entity, int index) : Component(entity), index(index), progress(index) {}
+    ~PathIndex() override = default;
 };
 
 #endif //SDL_GAME_PATHINDEX_H

@@ -26,7 +26,7 @@ public:
                std::optional<SDL_Rect> dstR = std::nullopt, std::optional<float> radios = std::nullopt);
 
 
-    ~Visibility();
+    ~Visibility() override;
 
     SDL_Texture *getTexture() { return texture; }
 

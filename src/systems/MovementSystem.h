@@ -13,6 +13,6 @@ public:
 
     ~MovementSystem()= default;
 
-    void update(std::vector<std::shared_ptr<Entity>> *layers,  GameData & gameData) override;
+    void update(Entities *layers,  GameData & gameData) override;
 };
 #endif //SDL_GAME_MOVEMENTSYSTEM_H

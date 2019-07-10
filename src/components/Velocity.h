@@ -28,7 +28,7 @@ public:
 
     Velocity(Entity *entity, float x, float y);
 
-    ~Velocity() = default;
+    ~Velocity() override = default;
 
     float getX() { return X; }
 
@@ -58,7 +58,6 @@ class Acceleration : public Velocity {
 public:
     static constexpr ComponentType type = ComponentType::ACCELERATION;
     Acceleration(Entity *entity, float x, float y):Velocity(entity,x,y){}
-    ~Acceleration()= default;
 };
 
 #endif //SDL_GAME_VELOCITY_H

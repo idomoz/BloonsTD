@@ -23,7 +23,7 @@ public:
                                                                         interval(interval),
                                                                         timeToRecharge(delay ? delay : interval),
                                                                         amountReady(delay == 0) {}
-
+    ~Sequence() override = default;
     int getAmountReady();
 };
 
