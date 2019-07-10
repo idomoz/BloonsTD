@@ -19,11 +19,12 @@ class Sequence : public Component {
 public:
     static constexpr ComponentType type = ComponentType::SEQUENCE;
 
-    Sequence(Entity *entity, int amount, float interval, float delay) : Component(entity), amount(amount),
-                                                                        interval(interval),
-                                                                        timeToRecharge(delay ? delay : interval),
-                                                                        amountReady(delay == 0) {}
+    Sequence(int amount, float interval, float delay) : amount(amount), interval(interval),
+                                                        timeToRecharge(delay ? delay : interval),
+                                                        amountReady(delay == 0) {}
+
     ~Sequence() override = default;
+
     int getAmountReady();
 };
 

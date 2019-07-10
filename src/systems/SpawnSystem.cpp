@@ -26,6 +26,7 @@ void SpawnSystem::update(Entities *layers, GameData &gameData) {
                 }
             }
         }
-        layers[i] += newEntities;
+        if (!newEntities.empty())
+            layers[i] += newEntities;
     }
 }

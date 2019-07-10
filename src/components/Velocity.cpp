@@ -4,7 +4,7 @@
 
 #include "Velocity.h"
 
-Velocity::Velocity(Entity *entity, float x, float y) : Component(entity), X(x), Y(y) {}
+Velocity::Velocity(float x, float y) : X(x), Y(y) {}
 
 
 

@@ -46,32 +46,36 @@ Game::Game(bool fullscreen, float mapScale) {
     auto button = new Entity();
     button->addComponent<Kind>("Super_Monkey");
     button->addComponent<Visibility>(gameData.renderer, gameData.assets["Super_Monkey"],
-                                     SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 10, gameData.assets["Super_Monkey"]->w,
-                                              gameData.assets["Super_Monkey"]->h});
+                                     SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 10,
+                                              int(gameData.assets["Super_Monkey"]->w / 1.5), 0});
     button->addComponent<Action>(DRAG);
-    layers[3].emplace_back(button);
+    button->addComponent<Range>(200);
+    layers[MENU_LAYER].emplace_back(button);
     button = new Entity();
     button->addComponent<Kind>("Sniper_Monkey");
     button->addComponent<Visibility>(gameData.renderer, gameData.assets["Sniper_Monkey"],
-                                     SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10, gameData.assets["Sniper_Monkey"]->w,
-                                              gameData.assets["Sniper_Monkey"]->h});
+                                     SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10,
+                                              int(gameData.assets["Sniper_Monkey"]->w / 1.5), 0});
     button->addComponent<Action>(DRAG);
-    layers[3].emplace_back(button);
+    button->addComponent<Range>(50);
+    layers[MENU_LAYER].emplace_back(button);
     auto s = new Entity();
     s->addComponent<Sequence>(100, 10, 0);
     s->addComponent<Kind>(std::string("Ceramic"));
     s->addComponent<Speed>(3.5);
-    layers[1].emplace_back(s);
+    layers[GAME_LAYER].emplace_back(s);
     s = new Entity();
     s->addComponent<Sequence>(100, 10, 60 * 5);
     s->addComponent<Kind>(std::string("Blue"));
     s->addComponent<Speed>(1.5);
-    layers[1].emplace_back(s);
+    layers[GAME_LAYER].emplace_back(s);
 
     systems.emplace_back(new EventSystem);
     systems.emplace_back(new SpawnSystem);
     systems.emplace_back(new DraggingSystem);
     systems.emplace_back(new MovementSystem);
+    systems.emplace_back(new HandleMoveEntitiySystem);
+    systems.emplace_back(new RemoveEntitiesSystem);
     systems.emplace_back(renderSystem);
 
 }
@@ -95,14 +99,14 @@ void Game::loadMap() {
         unsigned char byte;
         obstaclesFile.read((char *) &byte, 1);
         for (int j = 0; j < 8; ++j) {
-            char bit = (byte & int(pow(2, j))) >> j;
+            char bit = (byte & 2 << j) >> j;
             gameData.mapData[x][y] = bit;
             x++;
-            if(x ==MAP_WIDTH){
+            if (x == MAP_WIDTH) {
                 x = 0;
                 y++;
             }
-            if (x*y >= MAP_WIDTH * MAP_HEIGHT)
+            if (x * y >= MAP_WIDTH * MAP_HEIGHT)
                 goto readPathFile;
         }
     }

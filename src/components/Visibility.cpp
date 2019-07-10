@@ -4,8 +4,7 @@
 
 #include "Visibility.h"
 
-Visibility::Visibility(Entity *entity, SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR,
-                       std::optional<float> radios) : Component(entity), dstRect(dstR), radios(radios) {
+Visibility::Visibility(SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR) : dstRect(dstR){
     loadTexture(renderer, newSurface);
 }
 

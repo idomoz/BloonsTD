@@ -25,7 +25,6 @@ class Entity {
     std::bitset<ComponentType::LENGTH> componentsMask;
     std::unique_ptr<Component> components[ComponentType::LENGTH];
 public:
-
     template<class ... T>
     std::optional<std::tuple<T &...>> getComponents() {
         constexpr uint64_t mask = createMask({T::type...});
@@ -44,7 +43,7 @@ public:
 
     template<typename T, typename ... Targs>
     Component &addComponent(Targs &&... args) {
-        T *c = new T(this, std::forward<Targs>(args)...);
+        T *c = new T(std::forward<Targs>(args)...);
         components[T::type] = std::move(std::unique_ptr<Component>(c));
         componentsMask[T::type] = true;
         return *c;
@@ -52,7 +51,7 @@ public:
 
     template<typename T>
     void removeComponent() {
-        components[T::type].release();
+        components[T::type].reset(nullptr);
         componentsMask[T::type] = false;
     }
 

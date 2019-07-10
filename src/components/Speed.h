@@ -14,7 +14,7 @@ public:
 
     static constexpr ComponentType type = ComponentType::SPEED;
 
-    Speed(Entity *entity, float speed) : Component(entity), speed(speed) {}
+    explicit Speed(float speed) :speed(speed) {}
     ~Speed() override = default;
 };
 

@@ -19,6 +19,9 @@
 #include "components/Velocity.h"
 #include "components/Draggable.h"
 #include "components/Action.h"
+#include "components/Range.h"
+#include "eventComponents/MoveEntityEvent.h"
+#include "eventComponents/RemoveEntityEvent.h"
 
 typedef std::vector<std::shared_ptr<Entity>> Entities;
 

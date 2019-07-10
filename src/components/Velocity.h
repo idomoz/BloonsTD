@@ -11,7 +11,7 @@
 #include "../Component.h"
 
 class Velocity : public Component {
-    float X,Y;
+    float X, Y;
 
     inline void getAlphaAndR(float &alpha, float &R) {
         alpha = atan2f(Y, X);
@@ -26,7 +26,7 @@ class Velocity : public Component {
 public:
     static constexpr ComponentType type = ComponentType::VELOCITY;
 
-    Velocity(Entity *entity, float x, float y);
+    Velocity(float x, float y);
 
     ~Velocity() override = default;
 
@@ -57,7 +57,8 @@ public:
 class Acceleration : public Velocity {
 public:
     static constexpr ComponentType type = ComponentType::ACCELERATION;
-    Acceleration(Entity *entity, float x, float y):Velocity(entity,x,y){}
+
+    Acceleration(float x, float y) : Velocity(x, y) {}
 };
 
 #endif //SDL_GAME_VELOCITY_H

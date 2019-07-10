@@ -8,7 +8,7 @@
 #include "../Component.h"
 
 enum ActionType {
-    DRAG, CLICK, DROP
+    DRAG, CLICK, DROP, CHOOSE
 };
 
 class Action : public Component {
@@ -19,7 +19,7 @@ public:
 
     static constexpr ComponentType type = ComponentType::ACTION;
 
-    Action(Entity *entity, ActionType actionType, bool disabled = false) : Component(entity), actionType(actionType),
+    explicit Action(ActionType actionType, bool disabled = false) :actionType(actionType),
                                                                            disabled(disabled) {}
 
     ~Action() override = default;

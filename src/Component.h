@@ -12,33 +12,17 @@ struct Point {
 class Entity;
 
 enum ComponentType {
-    VISIBILITY,
-    POSITION,
-    VELOCITY,
-    SPEED,
-    ACCELERATION,
-    PATH_INDEX,
-    HEALTH,
-    KIND,
-    TYPE,
-    DAMAGE,
-    PIERCE,
-    SPREAD,
-    SEQUENCE,
-    ACTION,
-    DRAGGABLE,
+    VISIBILITY, POSITION, VELOCITY, SPEED, ACCELERATION, PATH_INDEX, HEALTH, KIND, TYPE,RANGE, DAMAGE, PIERCE, SPREAD, SEQUENCE, ACTION, DRAGGABLE,
+    MOVE_ENTITY_EVENT, REMOVE_ENTITY_EVENT,
     LENGTH
 
 };
 
 class Component {
-    Entity *entity;
 public:
-    explicit Component(Entity *entity) : entity(entity) {};
+     Component() = default;
 
     virtual ~Component() = default;
-
-    Entity *getEntity() { return entity; }
 
 };
 
