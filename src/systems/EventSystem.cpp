@@ -62,9 +62,11 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         draggable->addComponent<Range>(range);
                                         std::shared_ptr<Entity> ptr(draggable);
                                         gameData.selected = ptr;
+                                        auto rangeShadow = new Entity();
+                                        rangeShadow->addComponent<RangeShadow>(ptr);
+                                        newEntities[SHADOW_LAYER].emplace_back(rangeShadow);
                                         newEntities[MENU_LAYER].emplace_back(ptr);
                                         gameData.isDragging = true;
-                                        gameData.selectedHasRangeShadow = false;
                                         goto entityClicked;
                                     }
 
@@ -87,10 +89,6 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                 }
                                             }
                                             if (i == MENU_LAYER){
-                                                gameData.selectedHasRangeShadow=true;
-                                                auto rangeShadow = new Entity();
-                                                rangeShadow->addComponent<RangeShadow>(entity);
-                                                newEntities[SHADOW_LAYER].emplace_back(rangeShadow);
                                                 entity->addComponent<MoveEntityEvent>(GAME_LAYER);
                                             }
 
@@ -99,7 +97,6 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                     }
                                     case SELECT: {
                                         gameData.selected = entity;
-                                        gameData.selectedHasRangeShadow=true;
                                         goto entityClicked;
                                     }
                                 }

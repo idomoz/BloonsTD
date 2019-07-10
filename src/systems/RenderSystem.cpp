@@ -42,9 +42,7 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                     r.y = int(position.getY() * gameData.mapScale - r.h / 2.0);
                 }
 
-                if (gameData.selected == currentEntity and
-                    ((gameData.selectedHasRangeShadow and currentEntity != entity) or
-                     (!gameData.selectedHasRangeShadow and currentEntity == entity))) {
+                if (gameData.selected == currentEntity and currentEntity != entity){
                     int currentEntityX, currentEntityY;
                     if (positionP) {
                         currentEntityX = r.x;

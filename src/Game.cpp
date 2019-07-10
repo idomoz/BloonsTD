@@ -29,8 +29,8 @@ Game::Game(bool fullscreen, float mapScale) {
     std::initializer_list<std::pair<std::string, Point>> sprites[]{
             {{"map",         {SIDEBAR_WIDTH, 0}}},
             {},
+            {},
             {{"upgrade_bar", {0,             0}}, {"menu", {MAP_WIDTH + SIDEBAR_WIDTH, 0}}},
-            {}
     };
     for (int i = 0; i < N_LAYERS; i++) {
         for (auto &sprite :sprites[i]) {
@@ -57,18 +57,18 @@ Game::Game(bool fullscreen, float mapScale) {
                                      SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10,
                                               int(gameData.assets["Sniper_Monkey"]->w / 1.5), 0});
     button->addComponent<Action>(DRAG);
-    button->addComponent<Range>(50);
+    button->addComponent<Range>(30);
     layers[MENU_LAYER].emplace_back(button);
-//    auto s = new Entity();
-//    s->addComponent<Sequence>(100, 10, 0);
-//    s->addComponent<Kind>(std::string("Ceramic"));
-//    s->addComponent<Speed>(3.5);
-//    layers[GAME_LAYER].emplace_back(s);
-//    s = new Entity();
-//    s->addComponent<Sequence>(100, 10, 60 * 5);
-//    s->addComponent<Kind>(std::string("Blue"));
-//    s->addComponent<Speed>(1.5);
-//    layers[GAME_LAYER].emplace_back(s);
+    auto s = new Entity();
+    s->addComponent<Sequence>(100, 10, 0);
+    s->addComponent<Kind>(std::string("Ceramic"));
+    s->addComponent<Speed>(3.5);
+    layers[GAME_LAYER].emplace_back(s);
+    s = new Entity();
+    s->addComponent<Sequence>(100, 10, 60 * 5);
+    s->addComponent<Kind>(std::string("Blue"));
+    s->addComponent<Speed>(1.5);
+    layers[GAME_LAYER].emplace_back(s);
 
     systems.emplace_back(new EventSystem);
     systems.emplace_back(new SpawnSystem);
