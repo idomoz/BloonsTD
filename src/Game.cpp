@@ -59,16 +59,16 @@ Game::Game(bool fullscreen, float mapScale) {
     button->addComponent<Action>(DRAG);
     button->addComponent<Range>(50);
     layers[MENU_LAYER].emplace_back(button);
-    auto s = new Entity();
-    s->addComponent<Sequence>(100, 10, 0);
-    s->addComponent<Kind>(std::string("Ceramic"));
-    s->addComponent<Speed>(3.5);
-    layers[GAME_LAYER].emplace_back(s);
-    s = new Entity();
-    s->addComponent<Sequence>(100, 10, 60 * 5);
-    s->addComponent<Kind>(std::string("Blue"));
-    s->addComponent<Speed>(1.5);
-    layers[GAME_LAYER].emplace_back(s);
+//    auto s = new Entity();
+//    s->addComponent<Sequence>(100, 10, 0);
+//    s->addComponent<Kind>(std::string("Ceramic"));
+//    s->addComponent<Speed>(3.5);
+//    layers[GAME_LAYER].emplace_back(s);
+//    s = new Entity();
+//    s->addComponent<Sequence>(100, 10, 60 * 5);
+//    s->addComponent<Kind>(std::string("Blue"));
+//    s->addComponent<Speed>(1.5);
+//    layers[GAME_LAYER].emplace_back(s);
 
     systems.emplace_back(new EventSystem);
     systems.emplace_back(new SpawnSystem);

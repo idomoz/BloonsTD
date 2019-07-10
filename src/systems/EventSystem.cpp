@@ -64,6 +64,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         gameData.selected = ptr;
                                         newEntities[MENU_LAYER].emplace_back(ptr);
                                         gameData.isDragging = true;
+                                        gameData.selectedHasRangeShadow = false;
                                         goto entityClicked;
                                     }
 
@@ -75,7 +76,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         auto &draggable = *entity->getComponent<Draggable>();
                                         if (draggable.isPlaceable) {
                                             entity->removeComponent<Draggable>();
-                                            entity->getComponent<Action>()->actionType = CLICK;
+                                            entity->getComponent<Action>()->actionType = SELECT;
                                             gameData.isDragging = false;
                                             for (int x = std::max(mouseX - SIDEBAR_WIDTH - 20, 0);
                                                  x < std::min(mouseX - SIDEBAR_WIDTH + 21, MAP_WIDTH); ++x) {
@@ -85,12 +86,20 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                         gameData.mapData[x][y] = TOWER;
                                                 }
                                             }
-                                            if (i == MENU_LAYER)
+                                            if (i == MENU_LAYER){
+                                                gameData.selectedHasRangeShadow=true;
+                                                auto rangeShadow = new Entity();
+                                                rangeShadow->addComponent<RangeShadow>(entity);
+                                                newEntities[SHADOW_LAYER].emplace_back(rangeShadow);
                                                 entity->addComponent<MoveEntityEvent>(GAME_LAYER);
+                                            }
+
                                         }
                                         goto entityClicked;
                                     }
-                                    case CHOOSE: {
+                                    case SELECT: {
+                                        gameData.selected = entity;
+                                        gameData.selectedHasRangeShadow=true;
                                         goto entityClicked;
                                     }
                                 }

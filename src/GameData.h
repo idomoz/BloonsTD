@@ -32,6 +32,7 @@ public:
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     std::shared_ptr<Entity> selected;
+    bool selectedHasRangeShadow = false;
 
     ~GameData();
 };

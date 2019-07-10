@@ -8,7 +8,7 @@
 #include "../Component.h"
 
 enum ActionType {
-    DRAG, CLICK, DROP, CHOOSE
+    DRAG, CLICK, DROP, SELECT
 };
 
 class Action : public Component {
