@@ -39,8 +39,8 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
 
                             if (auto positionP = entity->getComponent<Position>()) {
                                 auto &position = *positionP;
-                                entityX = int(position.getX() - w / 2.0);
-                                entityY = int(position.getY() - h / 2.0);
+                                entityX = int(position.value.X - w / 2.0);
+                                entityY = int(position.value.Y - h / 2.0);
                                 mouseX = originalMouseX - SIDEBAR_WIDTH;
                             } else
                                 mouseX = originalMouseX;
@@ -52,7 +52,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         auto &kind = *entity->getComponent<Kind>();
                                         auto &range = *entity->getComponent<Range>();
                                         auto draggable = new Entity();
-                                        SDL_Surface *surface = gameData.assets[kind.kind];
+                                        SDL_Surface *surface = gameData.assets[kind.value];
                                         draggable->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{
                                                 originalMouseX - int(surface->w / 4.0), mouseY - int(surface->h / 4.0),
                                                 int(surface->w / 1.5), int(surface->h / 1.5)});
@@ -60,6 +60,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         draggable->addComponent<Action>(DROP);
                                         draggable->addComponent<Kind>(kind);
                                         draggable->addComponent<Range>(range);
+
                                         std::shared_ptr<Entity> ptr(draggable);
                                         gameData.selected = ptr;
                                         auto rangeShadow = new Entity();
@@ -88,8 +89,14 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                         gameData.mapData[x][y] = TOWER;
                                                 }
                                             }
-                                            if (i == MENU_LAYER){
+                                            if (i == MENU_LAYER) {
                                                 entity->addComponent<MoveEntityEvent>(GAME_LAYER);
+                                                entity->addComponent<Type>(TOWER_T);
+                                                auto &visibility = *entity->getComponent<Visibility>();
+                                                SDL_Rect *dstRect = entity->getComponent<Visibility>()->getDstRect();
+                                                entity->addComponent<Position>(
+                                                        dstRect->x - SIDEBAR_WIDTH + dstRect->w / 2,
+                                                        dstRect->y + dstRect->h / 2);
                                             }
 
                                         }

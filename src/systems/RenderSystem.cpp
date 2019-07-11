@@ -38,22 +38,23 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                               int(dstRect->w * gameData.mapScale), int(dstRect->h * gameData.mapScale)};
                 if (positionP) {
                     auto &position = *positionP;
-                    r.x = int((position.getX() + SIDEBAR_WIDTH) * gameData.mapScale - r.w / 2.0);
-                    r.y = int(position.getY() * gameData.mapScale - r.h / 2.0);
+                    r.x = int((position.value.X + SIDEBAR_WIDTH) * gameData.mapScale - r.w / 2.0);
+                    r.y = int(position.value.Y * gameData.mapScale - r.h / 2.0);
                 }
 
-                if (gameData.selected == currentEntity and currentEntity != entity){
+                if (gameData.selected == currentEntity and currentEntity != entity) {
                     int currentEntityX, currentEntityY;
                     if (positionP) {
-                        currentEntityX = r.x;
-                        currentEntityY = r.y;
+                        auto &position = *positionP;
+                        currentEntityX = int((position.value.X + SIDEBAR_WIDTH) * gameData.mapScale);
+                        currentEntityY = int(position.value.Y * gameData.mapScale);
                     } else {
-                        currentEntityX = r.x + int((dstRect->w / 2.0) * gameData.mapScale);
-                        currentEntityY = r.y + int((dstRect->h / 2.0) * gameData.mapScale);
+                        currentEntityX = int((dstRect->x + dstRect->w / 2.0) * gameData.mapScale);
+                        currentEntityY = int((dstRect->y + dstRect->h / 2.0) * gameData.mapScale);
                     }
                     auto draggableP = currentEntity->getComponent<Draggable>();
                     bool isRed = draggableP ? !draggableP->isPlaceable : false;
-                    float range = currentEntity->getComponent<Range>()->range;
+                    float range = currentEntity->getComponent<Range>()->value *gameData.mapScale;
                     filledCircleRGBA(gameData.renderer, currentEntityX, currentEntityY, range, isRed ? 255 : 0, 0, 0,
                                      100);
                     aacircleRGBA(gameData.renderer, currentEntityX, currentEntityY, range, isRed ? 255 : 0, 0, 0, 150);

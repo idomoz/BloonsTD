@@ -21,12 +21,11 @@
 #include "systems/EventSystem.h"
 #include "systems/SpawnSystem.h"
 #include "systems/DraggingSystem.h"
-#include "systems/HandleMoveEntitiySystem.h"
 #include "systems/RemoveEntitiesSystem.h"
 #include "GameData.h"
 #include "boost/filesystem.hpp"
 #include <iostream>
-
+struct TempPoint{short X;short Y;};
 class Game {
     std::vector<std::unique_ptr<System>> systems;
     Entities layers[N_LAYERS];

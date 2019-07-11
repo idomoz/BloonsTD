@@ -17,12 +17,16 @@ Game::Game(bool fullscreen, float mapScale) {
         gameData.assets[p.path().filename().string().substr(0, p.path().filename().string().length() - 4)] = IMG_Load(
                 p.path().string().c_str());
     }
+    p = path("../assets/Sprites");
+    it = directory_iterator{p};
+    for (auto &p :it) {
+        gameData.assets[p.path().filename().string().substr(0, p.path().filename().string().length() - 4)] = IMG_Load(
+                p.path().string().c_str());
+    }
     gameData.assets["map"] = IMG_Load("../assets/map0.jpg");
     gameData.assets["upgrade_bar"] = IMG_Load("../assets/upgrade_bar.jpg");
     gameData.assets["upgrade_bar2"] = IMG_Load("../assets/upgrade_bar2.jpg");
     gameData.assets["menu"] = IMG_Load("../assets/menu.jpg");
-    gameData.assets["Super_Monkey"] = IMG_Load("../assets/Super_Monkey.png");
-    gameData.assets["Sniper_Monkey"] = IMG_Load("../assets/Sniper_Monkey.png");
     renderSystem = new RenderSystem();
     renderSystem->init(gameData);
     loadMap();
@@ -36,45 +40,46 @@ Game::Game(bool fullscreen, float mapScale) {
         for (auto &sprite :sprites[i]) {
             auto spriteEntity = new Entity();
             spriteEntity->addComponent<Visibility>(gameData.renderer, gameData.assets[sprite.first],
-                                                   SDL_Rect{sprite.second.X, sprite.second.Y,
+                                                   SDL_Rect{int(sprite.second.X), int(sprite.second.Y),
                                                             gameData.assets[sprite.first]->w,
                                                             gameData.assets[sprite.first]->h});
             layers[i].emplace_back(spriteEntity);
         }
 
     }
-    auto button = new Entity();
-    button->addComponent<Kind>("Super_Monkey");
-    button->addComponent<Visibility>(gameData.renderer, gameData.assets["Super_Monkey"],
-                                     SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 10,
-                                              int(gameData.assets["Super_Monkey"]->w / 1.5), 0});
-    button->addComponent<Action>(DRAG);
-    button->addComponent<Range>(200);
-    layers[MENU_LAYER].emplace_back(button);
-    button = new Entity();
-    button->addComponent<Kind>("Sniper_Monkey");
-    button->addComponent<Visibility>(gameData.renderer, gameData.assets["Sniper_Monkey"],
-                                     SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10,
-                                              int(gameData.assets["Sniper_Monkey"]->w / 1.5), 0});
-    button->addComponent<Action>(DRAG);
-    button->addComponent<Range>(30);
-    layers[MENU_LAYER].emplace_back(button);
+    auto tower = new Entity();
+    tower->addComponent<Kind>("Super_Monkey");
+    tower->addComponent<Visibility>(gameData.renderer, gameData.assets["Super_Monkey"],
+                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 10,
+                                             int(gameData.assets["Super_Monkey"]->w / 1.5), 0});
+    tower->addComponent<Action>(DRAG);
+    tower->addComponent<Range>(100);
+    layers[MENU_LAYER].emplace_back(tower);
+    tower = new Entity();
+    tower->addComponent<Kind>("Sniper_Monkey");
+    tower->addComponent<Visibility>(gameData.renderer, gameData.assets["Sniper_Monkey"],
+                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10,
+                                             int(gameData.assets["Sniper_Monkey"]->w / 1.5), 0});
+    tower->addComponent<Action>(DRAG);
+    tower->addComponent<Range>(30);
+    layers[MENU_LAYER].emplace_back(tower);
     auto s = new Entity();
     s->addComponent<Sequence>(100, 10, 0);
     s->addComponent<Kind>(std::string("Ceramic"));
-    s->addComponent<Speed>(3.5);
+    s->addComponent<Type>(SEQUENCE_T);
+    s->addComponent<Speed>(1);
     layers[GAME_LAYER].emplace_back(s);
     s = new Entity();
     s->addComponent<Sequence>(100, 10, 60 * 5);
     s->addComponent<Kind>(std::string("Blue"));
-    s->addComponent<Speed>(1.5);
+    s->addComponent<Type>(SEQUENCE_T);
+    s->addComponent<Speed>(1);
     layers[GAME_LAYER].emplace_back(s);
 
     systems.emplace_back(new EventSystem);
     systems.emplace_back(new SpawnSystem);
     systems.emplace_back(new DraggingSystem);
     systems.emplace_back(new MovementSystem);
-    systems.emplace_back(new HandleMoveEntitiySystem);
     systems.emplace_back(new RemoveEntitiesSystem);
     systems.emplace_back(renderSystem);
 
@@ -114,11 +119,15 @@ void Game::loadMap() {
     gameData.path.clear();
     std::ifstream pathFile(fileName + "_path.data", std::ios::binary);
     unsigned int length;
-    pathFile.read((char *) &gameData.startingPoint, 4);
+
+    TempPoint startingPoint, finishPoint;
+    pathFile.read((char *) &startingPoint, 4);
     pathFile.read((char *) &length, 4);
     gameData.path.resize(length);
     pathFile.read(&gameData.path[0], length);
-    pathFile.read((char *) &gameData.finishPoint, 4);
+    pathFile.read((char *) &finishPoint, 4);
+    gameData.startingPoint = {float(startingPoint.X), float(startingPoint.Y)};
+    gameData.finishPoint = {float(finishPoint.X), float(finishPoint.Y)};
 }
 
 

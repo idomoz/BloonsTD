@@ -10,11 +10,11 @@
 
 class Speed : public Component {
 public:
-    float speed;
+    float value;
 
     static constexpr ComponentType type = ComponentType::SPEED;
 
-    explicit Speed(float speed) :speed(speed) {}
+    explicit Speed(float value) :value(value) {}
     ~Speed() override = default;
 };
 

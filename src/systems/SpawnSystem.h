@@ -6,6 +6,7 @@
 #define SDL_GAME_SPAWNSYSTEM_H
 
 #include <vector>
+#include <limits>
 #include <iterator>
 #include "../System.h"
 

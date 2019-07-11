@@ -6,47 +6,33 @@
 #define SDL_GAME_VELOCITY_H
 
 #include <cmath>
-
+#include "../Physics.h"
 
 #include "../Component.h"
 
 class Velocity : public Component {
-    float X, Y;
-
-    inline void getAlphaAndR(float &alpha, float &R) {
-        alpha = atan2f(Y, X);
-        R = X / sinf(alpha);
-    }
-
-    inline void setXAndY(float alpha, float R) {
-        X = R * cosf(alpha);
-        Y = R * sinf(alpha);
-    }
 
 public:
+    Point value;
     static constexpr ComponentType type = ComponentType::VELOCITY;
 
     Velocity(float x, float y);
 
     ~Velocity() override = default;
 
-    float getX() { return X; }
-
-    float getY() { return Y; }
 
     void setVelocity(float x, float y) {
-        X = x;
-        Y = y;
+        value={x,y};
     }
 
     void changeVelocity(float deltaX, float deltaY) {
-        X += deltaX;
-        Y += deltaY;
+        value.X += deltaX;
+        value.Y += deltaY;
     }
 
-    void turnDirection(float deltaDeg);
+    void turnDirection(float deltaRad);
 
-    void setDirection(float deg);
+    void setDirection(float rad);
 
     void setSpeed(float speed);
 

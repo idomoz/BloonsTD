@@ -16,14 +16,14 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                     auto &velocity = *velocityP;
                     if (auto accelerationP = entity->getComponent<Acceleration>()) {
                         auto &acceleration = *accelerationP;
-                        velocity.changeVelocity(acceleration.getX(), acceleration.getY());
+                        velocity.changeVelocity(acceleration.value.X, acceleration.value.Y);
                     }
-                    deltaX = velocity.getX();
-                    deltaY = velocity.getY();
+                    deltaX = velocity.value.X;
+                    deltaY = velocity.value.Y;
 
                 } else if (auto components2 = entity->getComponents<PathIndex, Speed>()) {
                     auto[pathIndex, speed] =components2.value();
-                    pathIndex.progress += speed.speed;
+                    pathIndex.progress += speed.value;
                     float deltaIndex = pathIndex.progress - pathIndex.index;
                     while (deltaIndex >= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2))) {
                         switch (gameData.path[pathIndex.index]) {

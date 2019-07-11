@@ -5,8 +5,8 @@
 #ifndef SDL2_GAME_COMPONENT_H
 #define SDL2_GAME_COMPONENT_H
 struct Point {
-    short X;
-    short Y;
+    float X;
+    float Y;
 };
 
 class Entity;

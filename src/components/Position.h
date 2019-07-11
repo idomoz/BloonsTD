@@ -8,26 +8,19 @@
 #include "../Component.h"
 
 class Position : public Component {
-    float X, Y;
+
 public:
+    Point value;
     static constexpr ComponentType type = ComponentType::POSITION;
 
-    Position(float x, float y) : X(x), Y(y) {};
+    Position(float x, float y) : value{x,y} {};
 
     ~Position() override = default;
 
-    float getX() { return X; }
-
-    float getY() { return Y; }
-
-    void setPosition(float x, float y) {
-        X = x;
-        Y = y;
-    }
 
     void changePosition(float deltaX, float deltaY) {
-        X += deltaX;
-        Y += deltaY;
+        value.X += deltaX;
+        value.Y += deltaY;
     }
 };
 

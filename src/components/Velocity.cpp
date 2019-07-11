@@ -4,31 +4,26 @@
 
 #include "Velocity.h"
 
-Velocity::Velocity(float x, float y) : X(x), Y(y) {}
+Velocity::Velocity(float x, float y) : value{x, y} {}
 
 
-
-void Velocity::turnDirection(float deltaDeg) {
-    float alpha, R;
-    getAlphaAndR(alpha, R);
-    setXAndY(alpha + deltaDeg, R);
+void Velocity::turnDirection(float deltaRad) {
+    auto[alpha, R] = cartesianToPolar(value.X, value.Y);
+    std::tie(value.X, value.Y) = polarToCartesian(alpha + deltaRad, R);
 }
 
-void Velocity::setDirection(float deg) {
-    float alpha, R;
-    getAlphaAndR(alpha, R);
-    setXAndY(deg, R);
+void Velocity::setDirection(float rad) {
+    auto[_, R] = cartesianToPolar(value.X, value.Y);
+    std::tie(value.X, value.Y) = polarToCartesian(rad, R);
 }
 
 void Velocity::changeSpeed(float deltaSpeed) {
-    float alpha, R;
-    getAlphaAndR(alpha, R);
-    setXAndY(alpha, R + deltaSpeed);
+    auto[alpha, R] = cartesianToPolar(value.X, value.Y);
+    std::tie(value.X, value.Y) = polarToCartesian(alpha, R + deltaSpeed);
 }
 
 void Velocity::setSpeed(float speed) {
-    float alpha, R;
-    getAlphaAndR(alpha, R);
-    setXAndY(alpha, speed);
+    auto[alpha, _] = cartesianToPolar(value.X, value.Y);
+    std::tie(value.X, value.Y) = polarToCartesian(alpha, speed);
 }
 

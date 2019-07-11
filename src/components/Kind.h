@@ -12,10 +12,10 @@ class Kind : public Component {
 
 
 public:
-    std::string kind;
+    std::string value;
     static constexpr ComponentType type = ComponentType::KIND;
 
-    explicit Kind(std::string kind) :kind(std::move(kind)) {}
+    explicit Kind(std::string value) :value(std::move(value)) {}
     ~Kind() override = default;
 };
 

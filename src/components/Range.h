@@ -9,10 +9,10 @@
 
 class Range : public Component {
 public:
-    float range;
+    float value;
     static constexpr ComponentType type = ComponentType::RANGE;
 
-    explicit Range(float range) : range(range) {}
+    explicit Range(float value) : value(value) {}
 
     ~Range() override = default;
 };
