@@ -34,6 +34,7 @@ Game::Game(bool fullscreen, float mapScale) {
             {{"map",         {SIDEBAR_WIDTH, 0}}},
             {},
             {},
+            {},
             {{"upgrade_bar", {0,             0}}, {"menu", {MAP_WIDTH + SIDEBAR_WIDTH, 0}}},
     };
     for (int i = 0; i < N_LAYERS; i++) {
@@ -67,17 +68,17 @@ Game::Game(bool fullscreen, float mapScale) {
     s->addComponent<Sequence>(100, 10, 0);
     s->addComponent<Kind>(std::string("Ceramic"));
     s->addComponent<Type>(SEQUENCE_T);
-    s->addComponent<Speed>(1);
+    s->addComponent<Speed>(3.5);
     layers[GAME_LAYER].emplace_back(s);
     s = new Entity();
     s->addComponent<Sequence>(100, 10, 60 * 5);
     s->addComponent<Kind>(std::string("Blue"));
     s->addComponent<Type>(SEQUENCE_T);
-    s->addComponent<Speed>(1);
+    s->addComponent<Speed>(1.5);
     layers[GAME_LAYER].emplace_back(s);
 
-    systems.emplace_back(new EventSystem);
     systems.emplace_back(new SpawnSystem);
+    systems.emplace_back(new EventSystem);
     systems.emplace_back(new DraggingSystem);
     systems.emplace_back(new MovementSystem);
     systems.emplace_back(new RemoveEntitiesSystem);

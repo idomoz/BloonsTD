@@ -4,7 +4,7 @@
 
 #include "Visibility.h"
 
-Visibility::Visibility(SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR) : dstRect(dstR){
+Visibility::Visibility(SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR, float angle) : dstRect(dstR), angle(angle){
     loadTexture(renderer, newSurface);
 }
 

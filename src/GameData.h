@@ -22,7 +22,7 @@ public:
     bool isDragging = false;
     int level = 0;
     int map = 0;
-    float mapScale = 1.5;
+    float mapScale;
     bool fullscreen;
     std::vector<char> path;
     char mapData[MAP_WIDTH][MAP_HEIGHT];

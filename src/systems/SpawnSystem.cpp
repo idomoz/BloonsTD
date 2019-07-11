@@ -6,8 +6,8 @@
 
 
 void SpawnSystem::update(Entities *layers, GameData &gameData) {
+    Entities newEntities[N_LAYERS];
     for (int i = 0; i < N_LAYERS; ++i) {
-        Entities newEntities;
         for (auto &entity: layers[i]) {
             if (auto typeP = entity->getComponent<Type>()) {
                 switch (typeP->value) {
@@ -26,41 +26,64 @@ void SpawnSystem::update(Entities *layers, GameData &gameData) {
                             bloon->addComponent<Visibility>(gameData.renderer, surface,
                                                             SDL_Rect{int(gameData.startingPoint.X),
                                                                      int(gameData.startingPoint.Y),
-                                                                     surface->w / 3, surface->h / 3});
+                                                                     int(surface->w / 3), int(surface->h / 3)});
                             bloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
-                            newEntities.emplace_back(bloon);
+                            newEntities[GAME_LAYER].emplace_back(bloon);
                         }
                         break;
                     }
                     case TOWER_T: {
-                        auto[kind, towerRange, towerPosition] = entity->getComponents<Kind, Range, Position>().value();
+                        auto[kind, towerRange, towerPosition, strategy] = entity->getComponents<Kind, Range, Position, Strategy>().value();
                         float minDistance = MAP_HEIGHT + MAP_WIDTH;
-                        Point closestPosition = {-1, -1};
-                        Entity * b;
+                        float minProgress = gameData.path.size();
+                        float maxProgress = -1;
+                        Entity *closestBloon = nullptr, *firstBloon = nullptr, *lastBloon = nullptr;
                         for (auto &gameEntity: layers[GAME_LAYER]) {
                             float distance;
                             if (gameEntity->getComponent<Type>()->value == BLOON_T) {
-                                auto[bloonRange, bloonPosition] = gameEntity->getComponents<Range, Position>().value();
+                                auto[bloonRange, bloonPosition, pathIndex] = gameEntity->getComponents<Range, Position, PathIndex>().value();
                                 distance =
                                         twoPointsDistance(bloonPosition.value, towerPosition.value) - bloonRange.value;
+                                if (distance > towerRange.value)
+                                    continue;
                                 if (distance < minDistance) {
                                     minDistance = distance;
-                                    closestPosition = {bloonPosition.value.X, bloonPosition.value.Y};
-                                    b=gameEntity.get();
+                                    closestBloon = gameEntity.get();
                                 }
+                                if (pathIndex.progress < minProgress) {
+                                    minProgress = pathIndex.progress;
+                                    lastBloon = gameEntity.get();
+                                }
+                                if (pathIndex.progress > maxProgress) {
+                                    maxProgress = pathIndex.progress;
+                                    firstBloon = gameEntity.get();
+                                }
+
                             }
                         }
-                        if (closestPosition.X != -1 and minDistance <= towerRange.value) {
+                        if (closestBloon or firstBloon or lastBloon) {
+                            Entity *target;
+                            switch (strategy.value) {
+                                case CLOSEST:
+                                    target = closestBloon;
+                                    break;
+                                case FIRST:
+                                    target = firstBloon;
+                                    break;
+                                case LAST:
+                                    target = lastBloon;
+                                    break;
+                            }
                             auto shot = new Entity();
                             shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
-                            float angle = twoPointsAngle(towerPosition.value, closestPosition);
+                            float angle = twoPointsAngle(towerPosition.value, target->getComponent<Position>()->value);
                             auto[velocityX, velocityY] = polarToCartesian(angle, 10);
                             shot->addComponent<Velocity>(velocityX, velocityY);
                             shot->addComponent<Type>(SHOT_T);
-                            SDL_Surface * surface = gameData.assets["Dart"];
-                            shot->addComponent<Visibility>(gameData.renderer, gameData.assets["Dart"],
-                                                           SDL_Rect{0, 0, gameData.assets["Dart"]->w / 2});
-                            newEntities.emplace_back(shot);
+                            SDL_Surface *surface = gameData.assets["Dart"];
+                            shot->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 25},
+                                                           radToDeg(angle));
+                            newEntities[SHOTS_LAYER].emplace_back(shot);
                         }
 
                         break;
@@ -68,7 +91,9 @@ void SpawnSystem::update(Entities *layers, GameData &gameData) {
                 }
             }
         }
-        if (!newEntities.empty())
-            layers[i] += newEntities;
+    }
+    for (int i = 0; i < N_LAYERS; ++i) {
+        if (!newEntities[i].empty())
+            layers[i] += newEntities[i];
     }
 }

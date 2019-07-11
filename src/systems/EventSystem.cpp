@@ -54,13 +54,13 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         auto draggable = new Entity();
                                         SDL_Surface *surface = gameData.assets[kind.value];
                                         draggable->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{
-                                                originalMouseX - int(surface->w / 4.0), mouseY - int(surface->h / 4.0),
+                                                originalMouseX - int(surface->w / 3.0), mouseY - int(surface->h / 3.0),
                                                 int(surface->w / 1.5), int(surface->h / 1.5)});
                                         draggable->addComponent<Draggable>();
                                         draggable->addComponent<Action>(DROP);
                                         draggable->addComponent<Kind>(kind);
                                         draggable->addComponent<Range>(range);
-
+                                        draggable->addComponent<Strategy>(FIRST);
                                         std::shared_ptr<Entity> ptr(draggable);
                                         gameData.selected = ptr;
                                         auto rangeShadow = new Entity();

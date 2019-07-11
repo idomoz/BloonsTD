@@ -19,11 +19,17 @@ inline std::tuple<float, float> polarToCartesian(float alpha, float R) {
     return std::make_tuple(R * cosf(alpha), R * sinf(alpha));
 }
 
-inline float twoPointsDistance(Point point1, Point point2){
+inline float twoPointsDistance(Point point1, Point point2) {
     return sqrtf(powf(point1.X - point2.X, 2) +
                  powf(point1.Y - point2.Y, 2));
 }
-inline float twoPointsAngle(Point point1, Point point2){
-    return atan2f(point2.Y - point1.Y,point2.X - point1.X);
+
+inline float twoPointsAngle(Point point1, Point point2) {
+    return atan2f(point2.Y - point1.Y, point2.X - point1.X);
 }
+
+inline float radToDeg(float radians) {
+    return radians * (180.0 / 3.141592653589793238463);
+}
+
 #endif //SDL_GAME_PHYSICS_H

@@ -21,6 +21,7 @@
 #include "components/Action.h"
 #include "components/Range.h"
 #include "components/Type.h"
+#include "components/Strategy.h"
 #include "components/RangeShadow.h"
 #include "eventComponents/MoveEntityEvent.h"
 #include "eventComponents/RemoveEntityEvent.h"
