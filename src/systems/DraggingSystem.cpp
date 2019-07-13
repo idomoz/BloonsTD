@@ -7,7 +7,8 @@
 
 
 void DraggingSystem::update(Entities *layers, GameData &gameData) {
-
+    if(!gameData.isDragging)
+        return;
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
     mouseX = int(mouseX / gameData.mapScale);
@@ -20,8 +21,7 @@ void DraggingSystem::update(Entities *layers, GameData &gameData) {
                                        mouseY - int(visibility.getDstRect()->h / 2.0));
                 bool freePosition = true;
                 if (mouseX > SIDEBAR_WIDTH + MAP_WIDTH or mouseX < SIDEBAR_WIDTH)
-                    freePosition = false;
-
+                    freePosition = true;
                 else
                     for (int x = mouseX - SIDEBAR_WIDTH - 4; x < mouseX - SIDEBAR_WIDTH + 5; ++x) {
                         for (int y = mouseY - 4; y < mouseY + 5; ++y) {

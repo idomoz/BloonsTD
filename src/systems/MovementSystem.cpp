@@ -59,9 +59,15 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                         deltaIndex -= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2));
                         if (pathIndex.index < gameData.path.size() - 1)
                             pathIndex.index++;
+
+
                     }
                 }
                 position.changePosition(deltaX, deltaY);
+                if (position.value.X > MAP_WIDTH or position.value.X < 0 or position.value.Y > MAP_HEIGHT or
+                    position.value.Y < 0) {
+                    entity->addComponent<RemoveEntityEvent>();
+                }
             }
         }
     }

@@ -19,9 +19,11 @@
 #include "systems/RenderSystem.h"
 #include "systems/MovementSystem.h"
 #include "systems/EventSystem.h"
-#include "systems/SpawnSystem.h"
+#include "systems/BloonsSpawnSystem.h"
+#include "systems/ShotsSpawnSystem.h"
 #include "systems/DraggingSystem.h"
 #include "systems/RemoveEntitiesSystem.h"
+#include "systems/CollisionSystem.h"
 #include "GameData.h"
 #include "boost/filesystem.hpp"
 #include <iostream>

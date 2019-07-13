@@ -27,10 +27,11 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
 
     SDL_RenderClear(gameData.renderer);
     for (int i = 0; i < N_LAYERS; ++i) {
+        if (i == SEQUENCES_LAYER)
+            continue;
         for (auto &entity: layers[i]) {
             auto rangeShadowP = entity->getComponent<RangeShadow>();
-            auto &currentEntity = (rangeShadowP and rangeShadowP->entity == gameData.selected) ? rangeShadowP->entity
-                                                                                               : entity;
+            auto &currentEntity = rangeShadowP ? rangeShadowP->entity : entity;
             if (auto visibilityP = currentEntity->getComponent<Visibility>()) {
                 auto &visibility = *visibilityP;
                 SDL_Rect *dstRect = visibility.getDstRect();
@@ -49,7 +50,7 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                     entityCenter.y = int(dstRect->y + dstRect->h / 2.0);
                 }
 
-                if (gameData.selected == currentEntity and currentEntity != entity) {
+                if (currentEntity != entity) {
                     auto draggableP = currentEntity->getComponent<Draggable>();
                     bool isRed = draggableP ? !draggableP->isPlaceable : false;
                     float range = currentEntity->getComponent<Range>()->value;

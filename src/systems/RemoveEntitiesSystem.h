@@ -5,6 +5,7 @@
 #ifndef SDL_GAME_REMOVEENTITIESSYSTEM_H
 #define SDL_GAME_REMOVEENTITIESSYSTEM_H
 #include <algorithm>
+#include <iostream>
 #include "../System.h"
 class RemoveEntitiesSystem : public System {
 public:

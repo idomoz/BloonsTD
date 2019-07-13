@@ -16,8 +16,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                 break;
             }
             case SDL_MOUSEBUTTONDOWN: {
-                if (!gameData.isDragging)
-                    gameData.selected.reset();
+
                 int mouseX, mouseY, originalMouseX;
                 SDL_GetMouseState(&mouseX, &mouseY);
                 mouseX = originalMouseX = int(mouseX / gameData.mapScale);
@@ -72,7 +71,6 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                     }
 
                                     case CLICK: {
-
                                         goto entityClicked;
                                     }
                                     case DROP: {
@@ -81,29 +79,40 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                             entity->removeComponent<Draggable>();
                                             entity->getComponent<Action>()->actionType = SELECT;
                                             gameData.isDragging = false;
-                                            for (int x = std::max(mouseX - SIDEBAR_WIDTH - 20, 0);
-                                                 x < std::min(mouseX - SIDEBAR_WIDTH + 21, MAP_WIDTH); ++x) {
-                                                for (int y = std::max(mouseY - 20, 0);
-                                                     y < std::min(mouseY + 21, MAP_HEIGHT); ++y) {
-                                                    if (gameData.mapData[x][y] == FREE)
-                                                        gameData.mapData[x][y] = TOWER;
-                                                }
+                                            if (mouseX > SIDEBAR_WIDTH + MAP_WIDTH or mouseX < SIDEBAR_WIDTH) {
+                                                entity->addComponent<RemoveEntityEvent>();
+                                                gameData.selected.reset();
                                             }
-                                            if (i == MENU_LAYER) {
-                                                entity->addComponent<MoveEntityEvent>(GAME_LAYER);
-                                                entity->addComponent<Type>(TOWER_T);
-                                                auto &visibility = *entity->getComponent<Visibility>();
-                                                SDL_Rect *dstRect = entity->getComponent<Visibility>()->getDstRect();
-                                                entity->addComponent<Position>(
-                                                        dstRect->x - SIDEBAR_WIDTH + dstRect->w / 2,
-                                                        dstRect->y + dstRect->h / 2);
+                                            else {
+                                                for (int x = std::max(mouseX - SIDEBAR_WIDTH - 20, 0);
+                                                     x < std::min(mouseX - SIDEBAR_WIDTH + 21, MAP_WIDTH); ++x) {
+                                                    for (int y = std::max(mouseY - 20, 0);
+                                                         y < std::min(mouseY + 21, MAP_HEIGHT); ++y) {
+                                                        if (gameData.mapData[x][y] == FREE)
+                                                            gameData.mapData[x][y] = TOWER;
+                                                    }
+                                                }
+                                                if (i == MENU_LAYER) {
+                                                    entity->addComponent<MoveEntityEvent>(TOWERS_LAYER);
+                                                    entity->addComponent<Type>(TOWER_T);
+                                                    auto &visibility = *entity->getComponent<Visibility>();
+                                                    SDL_Rect *dstRect = entity->getComponent<Visibility>()->getDstRect();
+                                                    entity->addComponent<Position>(
+                                                            dstRect->x - SIDEBAR_WIDTH + dstRect->w / 2,
+                                                            dstRect->y + dstRect->h / 2);
+                                                }
                                             }
 
                                         }
                                         goto entityClicked;
                                     }
                                     case SELECT: {
+                                        if(entity==gameData.selected)
+                                            goto entityClicked;
                                         gameData.selected = entity;
+                                        auto rangeShadow = new Entity();
+                                        rangeShadow->addComponent<RangeShadow>(entity);
+                                        newEntities[SHADOW_LAYER].emplace_back(rangeShadow);
                                         goto entityClicked;
                                     }
                                 }
@@ -114,6 +123,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                     }
 
                 }
+                gameData.selected.reset();
                 entityClicked:
                 for (int i = 0; i < N_LAYERS; ++i) {
                     if (!newEntities[i].empty())

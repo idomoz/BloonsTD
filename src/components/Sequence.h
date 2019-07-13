@@ -19,7 +19,7 @@ class Sequence : public Component {
 public:
     static constexpr ComponentType type = ComponentType::SEQUENCE;
 
-    Sequence(int amount, float interval, float delay) : amount(amount), interval(interval),
+    Sequence(int amount, float interval, float delay=0) : amount(amount), interval(interval),
                                                         timeToRecharge(delay ? delay : interval),
                                                         amountReady(delay == 0) {}
 
