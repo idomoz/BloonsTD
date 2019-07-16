@@ -18,8 +18,6 @@ public:
 
     Velocity(float x, float y);
 
-    ~Velocity() override = default;
-
 
     void setVelocity(float x, float y) {
         value={x,y};

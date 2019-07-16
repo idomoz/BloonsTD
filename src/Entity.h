@@ -34,11 +34,26 @@ public:
         return std::nullopt;
     }
 
+    template<class ... T>
+    std::tuple<T *...> getComponentsP() {
+        return std::tuple<T *...>(((T *) components[T::type].get())...);
+    }
+
     template<class T>
     T *getComponent() {
         if (auto &c = components[T::type])
             return (T *) c.get();
         return nullptr;
+    }
+
+    template<typename ... Targs>
+    void addComponents(Targs &... args) {
+        std::initializer_list<std::tuple<ComponentType, Component *>> newComponents{
+                std::make_tuple(Targs::type, new Targs(args))...};
+        for (auto[t, p] :newComponents) {
+            componentsMask[t] = true;
+            components[t] = std::move(std::unique_ptr<Component>(p));
+        }
     }
 
     template<typename T, typename ... Targs>

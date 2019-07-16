@@ -22,7 +22,6 @@ public:
     explicit Action(ActionType actionType, bool disabled = false) :actionType(actionType),
                                                                            disabled(disabled) {}
 
-    ~Action() override = default;
 };
 
 #endif //SDL_GAME_ACTION_H

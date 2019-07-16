@@ -18,12 +18,12 @@ class Visibility : public Component {
     SDL_Surface *surface = nullptr;
     SDL_Texture *texture = nullptr;
     std::optional<SDL_Rect> dstRect;
-
 public:
-    float angle=0;
+    float angle = 0;
     static constexpr ComponentType type = ComponentType::VISIBILITY;
 
-    Visibility(SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR = std::nullopt,float angle = 0);
+    Visibility(SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR = std::nullopt,
+               float angle = 0);
 
 
     ~Visibility() override;
@@ -31,6 +31,8 @@ public:
     SDL_Texture *getTexture() { return texture; }
 
     SDL_Rect *getDstRect() { return dstRect ? &dstRect.value() : nullptr; }
+
+    void setDstRect(SDL_Rect newDstRect) {dstRect.value()= newDstRect;}
 
     void setPosition(int x, int y);
 

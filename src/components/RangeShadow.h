@@ -11,12 +11,11 @@
 class RangeShadow : public Component {
 
 public:
-    std::shared_ptr<Entity> entity;
+    EntityP entity;
     static constexpr ComponentType type = ComponentType::RANGE_SHADOW;
 
-    RangeShadow(std::shared_ptr<Entity> &entity) : entity(entity) {};
+    RangeShadow(EntityP &entity) : entity(entity) {};
 
-    ~RangeShadow() override = default;
 };
 
 #endif //SDL_GAME_RANGESHADOW_H

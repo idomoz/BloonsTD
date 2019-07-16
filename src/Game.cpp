@@ -50,46 +50,62 @@ Game::Game(bool fullscreen, float mapScale) {
         }
 
     }
+
+
+    // Towers
     auto tower = new Entity();
-    tower->addComponent<Kind>("Super_Monkey");
-    tower->addComponent<Visibility>(gameData.renderer, gameData.assets["Super_Monkey"],
-                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 10,
-                                             int(gameData.assets["Super_Monkey"]->w / 1.5), 0});
+    tower->addComponent<Kind>(SUPER_MONKEY);
+    tower->addComponent<ShotKind>(DART);
+    SDL_Surface *surface = gameData.assets["SuperMonkey"];
+    tower->addComponent<Visibility>(gameData.renderer, surface,
+                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 10, int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
     tower->addComponent<Range>(100);
+    tower->addComponent<AttackSpeed>(30);
+    tower->addComponent<Pierce>(4);
+    tower->addComponent<Damage>(21);
+    tower->addComponent<Distance>(150);
+    tower->addComponent<Type>(TOWER_T);
     layers[MENU_LAYER].emplace_back(tower);
+
     tower = new Entity();
-    tower->addComponent<Kind>("Sniper_Monkey");
-    tower->addComponent<Visibility>(gameData.renderer, gameData.assets["Sniper_Monkey"],
-                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10,
-                                             int(gameData.assets["Sniper_Monkey"]->w / 1.5), 0});
+    tower->addComponent<Kind>(SNIPER_MONKEY);
+    tower->addComponent<ShotKind>(DART);
+    surface = gameData.assets["SniperMonkey"];
+    tower->addComponent<Visibility>(gameData.renderer, surface,
+                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10, int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
-    tower->addComponent<Range>(30);
+    tower->addComponent<Range>(100);
+    tower->addComponent<AttackSpeed>(6);
+    tower->addComponent<Pierce>(5);
+    tower->addComponent<Damage>(1);
+    tower->addComponent<Distance>(300);
+    tower->addComponent<Type>(TOWER_T);
     layers[MENU_LAYER].emplace_back(tower);
+
+
+    // Sequences
     auto s = new Entity();
-    s->addComponent<Sequence>(100, 10, 0);
-    s->addComponent<Kind>(std::string("Ceramic"));
+    s->addComponent<Sequence>(1, 1, 0);
+    s->addComponent<Kind>(BAD);
     s->addComponent<Type>(SEQUENCE_T);
-    s->addComponent<Speed>(3.5);
-    layers[SEQUENCES_LAYER].emplace_back(s);
-    s = new Entity();
-    s->addComponent<Sequence>(100, 10, 60 * 5);
-    s->addComponent<Kind>(std::string("Blue"));
-    s->addComponent<Type>(SEQUENCE_T);
-    s->addComponent<Speed>(1.5);
-    layers[SEQUENCES_LAYER].emplace_back(s);
-    s = new Entity();
-    s->addComponent<Sequence>(1000, 0.5);
-    s->addComponent<Kind>(std::string("Pink"));
-    s->addComponent<Type>(SEQUENCE_T);
-    s->addComponent<Speed>(4.5);
     layers[SEQUENCES_LAYER].emplace_back(s);
 
+//    s = new Entity();
+//    s->addComponent<Sequence>(100, 20.2, 60 * 5);
+//    s->addComponent<Kind>(std::string("Blue"));
+//    s->addComponent<Type>(SEQUENCE_T);
+//    s->addComponent<Speed>(1.5);
+//    layers[SEQUENCES_LAYER].emplace_back(s);
+
+
+    // Systems
     systems.emplace_back(new BloonsSpawnSystem);
     systems.emplace_back(new ShotsSpawnSystem);
     systems.emplace_back(new EventSystem);
     systems.emplace_back(new DraggingSystem);
     systems.emplace_back(new CollisionSystem);
+    systems.emplace_back(new DamageSystem);
     systems.emplace_back(new MovementSystem);
     systems.emplace_back(new RemoveEntitiesSystem);
     systems.emplace_back(renderSystem);

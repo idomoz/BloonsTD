@@ -9,12 +9,12 @@
 #include <memory>
 #include <unordered_map>
 #include "Component.h"
+#include "Entity.h"
 #include "Settings.h"
 #include "SDL.h"
 constexpr char FREE = 0;
 constexpr char OBSTACLE = 1;
 constexpr char TOWER = 2;
-constexpr char BLOON = 3;
 
 class GameData {
 public:
@@ -31,7 +31,7 @@ public:
     std::unordered_map<std::string, SDL_Surface *> assets;
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
-    std::shared_ptr<Entity> selected;
+    EntityP selected;
 
     ~GameData();
 };

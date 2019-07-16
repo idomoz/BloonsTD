@@ -13,9 +13,9 @@ public:
     Point value;
     static constexpr ComponentType type = ComponentType::POSITION;
 
-    Position(float x, float y) : value{x,y} {};
+    Position(float x, float y) : value{x, y} {}
 
-    ~Position() override = default;
+    explicit Position(Point value) : value(value) {}
 
 
     void changePosition(float deltaX, float deltaY) {

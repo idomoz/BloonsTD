@@ -48,19 +48,19 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                 mouseY <= entityY + h) {
                                 switch (action.actionType) {
                                     case DRAG: {
-                                        auto &kind = *entity->getComponent<Kind>();
-                                        auto &range = *entity->getComponent<Range>();
+                                        auto[type, kind,shotKind, range, attackInterval, pierce, damage, distance] =
+                                        entity->getComponents<Type, Kind,ShotKind, Range, AttackSpeed, Pierce, Damage, Distance>().value();
                                         auto draggable = new Entity();
-                                        SDL_Surface *surface = gameData.assets[kind.value];
+                                        SDL_Surface *surface = gameData.assets[getSurfaceName(entity)];
                                         draggable->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{
                                                 originalMouseX - int(surface->w / 3.0), mouseY - int(surface->h / 3.0),
                                                 int(surface->w / 1.5), int(surface->h / 1.5)});
                                         draggable->addComponent<Draggable>();
                                         draggable->addComponent<Action>(DROP);
-                                        draggable->addComponent<Kind>(kind);
-                                        draggable->addComponent<Range>(range);
+                                        draggable->addComponents(type, kind, shotKind, range, attackInterval,
+                                                                 pierce, damage, distance);
                                         draggable->addComponent<Strategy>(FIRST);
-                                        std::shared_ptr<Entity> ptr(draggable);
+                                        EntityP ptr(draggable);
                                         gameData.selected = ptr;
                                         auto rangeShadow = new Entity();
                                         rangeShadow->addComponent<RangeShadow>(ptr);
@@ -82,8 +82,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                             if (mouseX > SIDEBAR_WIDTH + MAP_WIDTH or mouseX < SIDEBAR_WIDTH) {
                                                 entity->addComponent<RemoveEntityEvent>();
                                                 gameData.selected.reset();
-                                            }
-                                            else {
+                                            } else {
                                                 for (int x = std::max(mouseX - SIDEBAR_WIDTH - 20, 0);
                                                      x < std::min(mouseX - SIDEBAR_WIDTH + 21, MAP_WIDTH); ++x) {
                                                     for (int y = std::max(mouseY - 20, 0);
@@ -94,7 +93,6 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                 }
                                                 if (i == MENU_LAYER) {
                                                     entity->addComponent<MoveEntityEvent>(TOWERS_LAYER);
-                                                    entity->addComponent<Type>(TOWER_T);
                                                     auto &visibility = *entity->getComponent<Visibility>();
                                                     SDL_Rect *dstRect = entity->getComponent<Visibility>()->getDstRect();
                                                     entity->addComponent<Position>(
@@ -107,7 +105,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         goto entityClicked;
                                     }
                                     case SELECT: {
-                                        if(entity==gameData.selected)
+                                        if (entity == gameData.selected)
                                             goto entityClicked;
                                         gameData.selected = entity;
                                         auto rangeShadow = new Entity();

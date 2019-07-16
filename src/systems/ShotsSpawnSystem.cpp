@@ -6,7 +6,8 @@
 
 void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
     for (auto &entity: layers[TOWERS_LAYER]) {
-        auto[kind, towerRange, towerPosition, strategy] = entity->getComponents<Kind, Range, Position, Strategy>().value();
+        auto[kind, shotKind, towerRange, towerPosition, strategy, attackSpeed, pierce, damage, distance, visibility] =
+        entity->getComponents<Kind, ShotKind, Range, Position, Strategy, AttackSpeed, Pierce, Damage, Distance, Visibility>().value();
         float minDistance = MAP_HEIGHT + MAP_WIDTH;
         float minProgress = gameData.path.size();
         float maxProgress = -1;
@@ -46,17 +47,25 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                     target = lastBloon;
                     break;
             }
-            auto shot = new Entity();
-            shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
+            int amount = attackSpeed.getAmountReady();
             float angle = twoPointsAngle(towerPosition.value, target->getComponent<Position>()->value);
-            auto[velocityX, velocityY] = polarToCartesian(angle, 5);
-            shot->addComponent<Velocity>(velocityX, velocityY);
-            shot->addComponent<Type>(SHOT_T);
-            shot->addComponent<Range>(5);
-            SDL_Surface *surface = gameData.assets["Dart"];
-            shot->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 25},
-                                           radToDeg(angle));
-            layers[SHOTS_LAYER].emplace_back(shot);
-        }
+            for (int i = 0; i < amount; ++i) {
+                EntityP shot(new Entity());
+                shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
+                shot->addComponent<Type>(SHOT_T);
+                shot->addComponent<Kind>(shotKind.value);
+                auto[velocityX, velocityY] = polarToCartesian(angle, getSpeed(shot));
+                shot->addComponent<Velocity>(velocityX, velocityY);
+                shot->addComponent<Range>(5);
+                shot->addComponents(pierce, damage, distance);
+                shot->addComponent<PoppedBloons>();
+                SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
+                shot->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 25},
+                                               radToDeg(angle));
+                layers[SHOTS_LAYER].emplace_back(shot);
+            }
+            visibility.angle = radToDeg(angle) + 90;
+        } else
+            attackSpeed.recharge();
     }
 }

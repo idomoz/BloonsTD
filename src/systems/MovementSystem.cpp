@@ -18,12 +18,24 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                         auto &acceleration = *accelerationP;
                         velocity.changeVelocity(acceleration.value.X, acceleration.value.Y);
                     }
+
                     deltaX = velocity.value.X;
                     deltaY = velocity.value.Y;
-
-                } else if (auto components2 = entity->getComponents<PathIndex, Speed>()) {
-                    auto[pathIndex, speed] =components2.value();
-                    pathIndex.progress += speed.value;
+                    if (auto distanceP = entity->getComponent<Distance>()) {
+                        auto &distance = distanceP->value;
+                        auto[alpha, R] = cartesianToPolar(deltaX, deltaY);
+                        if (distance == 0) {
+                            entity->addComponent<RemoveEntityEvent>();
+                        } else if (distance >= R) {
+                            distance -= R;
+                        } else {
+                            std::tie(deltaX, deltaY) = polarToCartesian(alpha, distance);
+                            distance = 0;
+                        }
+                    }
+                } else if (auto pathIndexP = entity->getComponent<PathIndex>()) {
+                    auto &pathIndex =*pathIndexP;
+                    pathIndex.progress += getSpeed(entity);
                     float deltaIndex = pathIndex.progress - pathIndex.index;
                     while (deltaIndex >= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2))) {
                         switch (gameData.path[pathIndex.index]) {

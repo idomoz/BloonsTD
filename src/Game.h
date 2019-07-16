@@ -24,6 +24,7 @@
 #include "systems/DraggingSystem.h"
 #include "systems/RemoveEntitiesSystem.h"
 #include "systems/CollisionSystem.h"
+#include "systems/DamageSystem.h"
 #include "GameData.h"
 #include "boost/filesystem.hpp"
 #include <iostream>

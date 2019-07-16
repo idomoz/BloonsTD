@@ -10,7 +10,5 @@ class Draggable: public Component{
 public:
     bool isPlaceable = false;
     static constexpr ComponentType type = ComponentType::DRAGGABLE;
-    Draggable() = default;
-    ~Draggable() override = default;
 };
 #endif //SDL_GAME_DRAGGABLE_H

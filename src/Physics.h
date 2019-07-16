@@ -11,7 +11,7 @@
 
 inline std::tuple<float, float> cartesianToPolar(float X, float Y) {
     float alpha = atan2f(Y, X);
-    float R = X / sinf(alpha);
+    float R = sqrtf(powf(X, 2) + powf(Y, 2));
     return std::make_tuple(alpha, R);
 }
 

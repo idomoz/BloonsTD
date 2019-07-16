@@ -2,7 +2,6 @@ from PIL import Image
 from sys import argv
 from struct import pack
 
-arrows = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗']
 # obstacles
 image = Image.open(argv[1] + "_obstacles.bmp")
 width, height = image.size
@@ -13,8 +12,6 @@ for y in range(height):
     for x in range(width):
         pixel = image.getpixel((x, y))
         byte |= (2 ** (i % 8)) * (pixel == (0, 0, 0))
-        print(i,pixel,byte)
-        _=input()
         if i % 8 == 7:
             obstacles += bytes([byte])
             byte = 0

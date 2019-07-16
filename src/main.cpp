@@ -4,10 +4,10 @@
 
 
 int main(int argc, char *argv[]) {
-    const int FPS = 60, frameDelay = 1000 / FPS;
+    const int FPS = 120, frameDelay = 1000 / FPS;
     Uint32 frameStart;
     int frameTime;
-    Game game(false, 1.5);
+    Game game(false, 2);
     while (game.running()) {
         frameStart = SDL_GetTicks();
 

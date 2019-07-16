@@ -24,7 +24,7 @@ int Sequence::getAmountReady() {
         timeToRecharge -= 1;
     } else {
         amountReady = 1 + int((1 - timeToRecharge) / interval);
-        timeToRecharge = fmodf((1 - timeToRecharge), interval);
+        timeToRecharge =  interval - fmodf((1 - timeToRecharge), interval);
         if(timeToRecharge == 0)
             timeToRecharge = interval;
     }
