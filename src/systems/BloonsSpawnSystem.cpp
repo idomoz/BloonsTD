@@ -27,7 +27,7 @@ void BloonsSpawnSystem::update(Entities *layers, GameData &gameData) {
             SDL_Surface *surface = gameData.assets[getSurfaceName(bloon)];
             bloon->addComponent<Visibility>(gameData.renderer, surface,
                                             SDL_Rect{0, 0, int(surface->w / 3), int(surface->h / 3)});
-            bloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
+            bloon->addComponent<Range>(std::min(surface->w / 6, surface->h / 6));
             layers[BLOONS_LAYER].emplace_back(bloon);
         }
     }

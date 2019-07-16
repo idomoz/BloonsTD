@@ -4,6 +4,32 @@
 
 #include "MovementSystem.h"
 
+enum Directions {
+    RIGHT, BOTTOM_RIGHT, BOTTOM, BOTTOM_LEFT, LEFT, TOP_LEFT, TOP, TOP_RIGHT
+};
+
+std::tuple<int, int> getDelta(int direction) {
+    switch (direction) {
+        case RIGHT:
+            return std::make_tuple(1, 0);
+        case BOTTOM_RIGHT:
+            return std::make_tuple(1, 1);
+        case BOTTOM:
+            return std::make_tuple(0, 1);
+        case BOTTOM_LEFT:
+            return std::make_tuple(-1, 1);
+        case LEFT:
+            return std::make_tuple(-1, 0);
+        case TOP_LEFT:
+            return std::make_tuple(-1, -1);
+        case TOP:
+            return std::make_tuple(0, -1);
+        case TOP_RIGHT:
+            return std::make_tuple(1, -1);
+        default:
+            return std::make_tuple(0, 0);
+    }
+}
 
 void MovementSystem::update(Entities *layers, GameData &gameData) {
     for (int i = 0; i < N_LAYERS; ++i) {
@@ -34,45 +60,28 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                         }
                     }
                 } else if (auto pathIndexP = entity->getComponent<PathIndex>()) {
-                    auto &pathIndex =*pathIndexP;
+                    auto &pathIndex = *pathIndexP;
                     pathIndex.progress += getSpeed(entity);
                     float deltaIndex = pathIndex.progress - pathIndex.index;
-                    while (deltaIndex >= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2))) {
-                        switch (gameData.path[pathIndex.index]) {
-                            case 0:
-                                deltaX += 1;
-                                break;
-                            case 1:
-                                deltaX += 1;
-                                deltaY += 1;
-                                break;
-                            case 2:
-                                deltaY += 1;
-                                break;
-                            case 3:
-                                deltaX += -1;
-                                deltaY += 1;
-                                break;
-                            case 4:
-                                deltaX += -1;
-                                break;
-                            case 5:
-                                deltaX += -1;
-                                deltaY += -1;
-                                break;
-                            case 6:
-                                deltaY += -1;
-                                break;
-                            case 7:
-                                deltaX += 1;
-                                deltaY += -1;
-                                break;
+                    if(entity->getComponent<Kind>()->value>=MOAB) {
+                        float angle = 0;
+                        Point tempPosition = position.value;
+                        for (int j = std::max(0,pathIndex.index-10);
+                             j < std::min(pathIndex.index + 10, int(gameData.path.size() - 1)); ++j) {
+                            auto[tempDeltaX, tempDeltaY] = getDelta(gameData.path[j]);
+                            tempPosition.X += tempDeltaX;
+                            tempPosition.Y += tempDeltaY;
                         }
+                        angle = radToDeg(twoPointsAngle( position.value,tempPosition));
+                        visibility.angle=angle;
+                    }
+                    while (deltaIndex >= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2))) {
+                        auto[tempDeltaX, tempDeltaY] = getDelta(gameData.path[pathIndex.index]);
+                        deltaX += tempDeltaX;
+                        deltaY += tempDeltaY;
                         deltaIndex -= (gameData.path[pathIndex.index] % 2 == 0 ? 1 : sqrt(2));
                         if (pathIndex.index < gameData.path.size() - 1)
                             pathIndex.index++;
-
-
                     }
                 }
                 position.changePosition(deltaX, deltaY);

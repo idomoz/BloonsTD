@@ -67,7 +67,6 @@ Game::Game(bool fullscreen, float mapScale) {
     tower->addComponent<Distance>(150);
     tower->addComponent<Type>(TOWER_T);
     layers[MENU_LAYER].emplace_back(tower);
-
     tower = new Entity();
     tower->addComponent<Kind>(SNIPER_MONKEY);
     tower->addComponent<ShotKind>(DART);

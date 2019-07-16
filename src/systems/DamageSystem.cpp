@@ -317,6 +317,8 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                                     gameData.path.size() - 1, pathIndex.progress + 20 - 10 * (i % 2));
                     if (fortifiedP)
                         newBloon->addComponent<Fortified>();
+                    newBloon->addComponent<Regrow>();
+                    newBloon->addComponent<Camo>();
                     surface = gameData.assets[getSurfaceName(newBloon)];
                     newBloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
                     newBloon->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 3, 0});
@@ -370,20 +372,22 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                     EntityP newBloon(new Entity());
                     shot->getComponent<PoppedBloons>()->value.emplace(newBloon.get());
                     newBloon->addComponent<Type>(BLOON_T);
-                    newBloon->addComponent<Kind>(i<3?ZOMG:DDT);
+                    newBloon->addComponent<Kind>(i<2?ZOMG:DDT);
                     if (fortifiedP)
                         newBloon->addComponent<Fortified>();
+                    if(i>=2)
+                        newBloon->addComponent<Camo>();
                     newBloon->addComponent<Lives>(getLives<TOTAL_LIVES>(newBloon));
                     newBloon->addComponent<Position>(gameData.startingPoint);
                     newBloon->addComponent<PathIndex>(0);
                     newBloon->getComponent<PathIndex>()->progress =
                             i < 2 ? std::fmaxf(0, pathIndex.progress - 20 + 10 * (i % 2)) : std::fminf(
-                                    gameData.path.size() - 1, pathIndex.progress + 20 - 10 * (i % 2));
+                                    gameData.path.size() - 1, pathIndex.progress + 30 - 10 * (i % 3));
                     surface = gameData.assets[getSurfaceName(newBloon)];
                     newBloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
                     newBloon->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 3, 0});
                     newBloons.emplace_back(newBloon);
-                    damageBloon(newBloon, shot, i == 0 ? ceilf(damage / 4.0) : damage - ceilf(damage / 4.0) * 3,
+                    damageBloon(newBloon, shot, i == 0 ? ceilf(damage / 5.0) : damage - ceilf(damage / 5.0) * 4,
                                 gameData, newBloons);
                 }
                 bloon->addComponent<RemoveEntityEvent>();
