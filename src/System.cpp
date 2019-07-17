@@ -6,7 +6,7 @@
 
 std::string getSurfaceName(EntityP &entity) {
     std::string surfaceName;
-    int damageStateLives = getLives<SELF_LIVES>(entity) / 5;
+    int damageStateLives = getBloonProperty<SELF_LIVES>(entity) / 5;
     switch (entity->getComponent<Type>()->value) {
         case BLOON_T: {
             auto[regrowP, camoP, fortifiedP, glueP, gumP, corrosiveP, lives] = entity->getComponentsP<Regrow, Camo, Fortified, Glue, Gum, Corrosive, Lives>();
@@ -71,7 +71,7 @@ std::string getSurfaceName(EntityP &entity) {
                 surfaceName += "Fortified";
             }
             if (damageStateLives) {
-                int maxLives = getLives<TOTAL_LIVES>(entity);
+                int maxLives = getBloonProperty<TOTAL_LIVES>(entity);
                 if (int damageState = (maxLives - lives->value) / damageStateLives)
                     surfaceName += "DamageState" + std::to_string(damageState);
             }
@@ -100,6 +100,9 @@ std::string getSurfaceName(EntityP &entity) {
         case SHOT_T: {
             switch (entity->getComponent<Kind>()->value) {
                 case DART:
+                    surfaceName = "Dart";
+                    break;
+                case GUN:
                     surfaceName = "Dart";
                     break;
             }
@@ -178,6 +181,9 @@ float getSpeed(EntityP &entity) {
             switch (entity->getComponent<Kind>()->value) {
                 case DART:
                     speed = 12;
+                    break;
+                case GUN:
+                    speed = 65;
                     break;
             }
             break;

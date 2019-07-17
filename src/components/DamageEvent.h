@@ -13,7 +13,7 @@ public:
     EntityP shot;
     static constexpr ComponentType type = ComponentType::DAMAGE_EVENT;
 
-    DamageEvent(int damage, EntityP &shot) : damage(damage), shot(shot) {}
+    DamageEvent(int damage, EntityP shot) : damage(damage), shot(shot) {}
 };
 
 #endif //SDL_GAME_DAMAGEEVENT_H

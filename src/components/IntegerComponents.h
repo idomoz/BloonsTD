@@ -28,16 +28,16 @@ enum BloonKinds{
     YELLOW_BLOON,
     PINK_BLOON,
     PURPLE_BLOON,
+    ZEBRA_BLOON,
     WHITE_BLOON,
     BLACK_BLOON,
-    ZEBRA_BLOON,
     LEAD_BLOON,
     RAINBOW_BLOON,
     CERAMIC_BLOON,
     MOAB,
     BFB,
-    DDT,
     ZOMG,
+    DDT,
     BAD
 };
 enum TowerKinds{

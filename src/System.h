@@ -37,99 +37,95 @@ operator+=(Entities &originalVector, Entities &newVector) {
 std::string getSurfaceName(EntityP &entity);
 
 enum ReturnValue {
-    TOTAL_LIVES, MIN_LIVES, SELF_LIVES
+    TOTAL_LIVES, MIN_LIVES, SELF_LIVES, YIELD
 };
 
 float getSpeed(EntityP &entity);
 
 template<ReturnValue returnValue>
-int getLives(EntityP &entity) {
+int getBloonProperty(EntityP &entity) {
     int totalLives = 0;
     int selfLives = 0;
     int minLives = 0;
+    int yield = 0;
     int additionalPreviousFortifiedLives = 0;
-    switch (entity->getComponent<Type>()->value) {
-        case BLOON_T: {
-            auto fortifiedP = entity->getComponent<Fortified>();
-            switch (entity->getComponent<Kind>()->value) {
-                case RED_BLOON:
-                    totalLives = 1;
-                    break;
-                case BLUE_BLOON:
-                    totalLives = 2;
-                    break;
-                case GREEN_BLOON:
-                    totalLives = 3;
-                    break;
-                case YELLOW_BLOON:
-                    totalLives = 4;
-                    break;
-                case PINK_BLOON:
-                    totalLives = 5;
-                    break;
-                case PURPLE_BLOON:
-                    selfLives = 1;
-                    totalLives = 11;
-                    break;
-                case WHITE_BLOON:
-                    selfLives = 1;
-                    totalLives = 11;
-                    break;
-                case BLACK_BLOON:
-                    selfLives = 1;
-                    totalLives = 11;
-                    break;
-                case ZEBRA_BLOON:
-                    selfLives = 1;
-                    totalLives = 23;
-                    break;
-                case LEAD_BLOON:
-                    selfLives = 1;
-                    totalLives = 23;
-                    break;
-                case RAINBOW_BLOON:
-                    selfLives = 1;
-                    totalLives = 47;
-                    break;
-                case CERAMIC_BLOON:
-                    selfLives = 10;
-                    totalLives = 104;
-                    break;
-                case MOAB:
-                    additionalPreviousFortifiedLives = 40;
-                    selfLives = 200;
-                    totalLives = 616;
-                    break;
-                case BFB:
-                    additionalPreviousFortifiedLives = 960;
-                    selfLives = 1200;
-                    totalLives = 3164;
-                    break;
-                case DDT:
-                    additionalPreviousFortifiedLives = 40;
-                    selfLives = 400;
-                    totalLives = 816;
-                    break;
-                case ZOMG:
-                    additionalPreviousFortifiedLives = 8640;
-                    selfLives = 4000;
-                    totalLives = 16656;
-                    break;
-                case BAD:
-                    additionalPreviousFortifiedLives = 26600;
-                    selfLives = 20000;
-                    totalLives = 55760;
-
-                    break;
-            }
-            minLives = totalLives - selfLives + 1;
-            if (fortifiedP) {
-                totalLives += additionalPreviousFortifiedLives + selfLives;
-                selfLives *= 2;
-                minLives += additionalPreviousFortifiedLives;
-            }
+    auto fortifiedP = entity->getComponent<Fortified>();
+    switch (entity->getComponent<Kind>()->value) {
+        case RED_BLOON:
+            yield = totalLives = 1;
             break;
-        }
+        case BLUE_BLOON:
+            yield = totalLives = 2;
+            break;
+        case GREEN_BLOON:
+            yield = totalLives = 3;
+            break;
+        case YELLOW_BLOON:
+            yield = totalLives = 4;
+            break;
+        case PINK_BLOON:
+            yield = totalLives = 5;
+            break;
+        case PURPLE_BLOON:
+            yield = totalLives = 11;
+            break;
+        case WHITE_BLOON:
+            yield = totalLives = 11;
+            break;
+        case BLACK_BLOON:
+            yield = totalLives = 11;
+            break;
+        case ZEBRA_BLOON:
+            yield = totalLives = 23;
+            break;
+        case LEAD_BLOON:
+            yield = totalLives = 23;
+            break;
+        case RAINBOW_BLOON:
+            yield = totalLives = 47;
+            break;
+        case CERAMIC_BLOON:
+            selfLives = 10;
+            yield = 95;
+            totalLives = 104;
+            break;
+        case MOAB:
+            additionalPreviousFortifiedLives = 40;
+            yield = 381;
+            selfLives = 200;
+            totalLives = 616;
+            break;
+        case BFB:
+            additionalPreviousFortifiedLives = 960;
+            yield = 1525;
+            selfLives = 1200;
+            totalLives = 3164;
+            break;
+        case DDT:
+            additionalPreviousFortifiedLives = 40;
+            yield = 381;
+            selfLives = 400;
+            totalLives = 816;
+            break;
+        case ZOMG:
+            additionalPreviousFortifiedLives = 8640;
+            yield = 6101;
+            selfLives = 4000;
+            totalLives = 16656;
+            break;
+        case BAD:
+            additionalPreviousFortifiedLives = 26600;
+            yield = 13346;
+            selfLives = 20000;
+            totalLives = 55760;
+
+            break;
+    }
+    minLives = totalLives - selfLives + 1;
+    if (fortifiedP) {
+        totalLives += additionalPreviousFortifiedLives + selfLives;
+        selfLives *= 2;
+        minLives += additionalPreviousFortifiedLives;
     }
     switch (returnValue) {
         case TOTAL_LIVES:
@@ -138,6 +134,8 @@ int getLives(EntityP &entity) {
             return minLives;
         case SELF_LIVES:
             return selfLives;
+        case YIELD:
+            return yield;
     }
 }
 

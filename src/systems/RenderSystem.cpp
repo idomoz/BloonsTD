@@ -3,8 +3,6 @@
 //
 
 #include "RenderSystem.h"
-#include "../components/Visibility.h"
-#include "../components/Position.h"
 
 
 void RenderSystem::init(GameData &gameData) {
@@ -19,8 +17,10 @@ void RenderSystem::init(GameData &gameData) {
                                        gameData.fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
     gameData.renderer = SDL_CreateRenderer(gameData.window, -1, 0);
     SDL_SetRenderDrawColor(gameData.renderer, 255, 255, 255, 255);
-    SDL_RenderSetScale(gameData.renderer, gameData.mapScale, gameData.mapScale);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
+    gameData.font = FC_CreateFont();
+    FC_LoadFont(gameData.font, gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 12 * gameData.mapScale,
+                FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
 }
 
 void RenderSystem::update(Entities *layers, GameData &gameData) {
@@ -35,28 +35,29 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
             if (auto visibilityP = currentEntity->getComponent<Visibility>()) {
                 auto &visibility = *visibilityP;
                 SDL_Rect *dstRect = visibility.getDstRect();
-                SDL_Rect newDstRect = {dstRect->x, dstRect->y, dstRect->w, dstRect->h};
+                SDL_Rect newDstRect = {int(dstRect->x * gameData.mapScale), int(dstRect->y * gameData.mapScale),
+                                       int(dstRect->w * gameData.mapScale), int(dstRect->h * gameData.mapScale)};
                 SDL_Point entityCenter;
 
                 auto positionP = currentEntity->getComponent<Position>();
                 if (positionP) {
                     auto &position = *positionP;
-                    entityCenter.x = position.value.X + SIDEBAR_WIDTH;
-                    entityCenter.y = position.value.Y;
-                    newDstRect.x = int(position.value.X + SIDEBAR_WIDTH - newDstRect.w / 2.0);
-                    newDstRect.y = int(position.value.Y - newDstRect.h / 2.0);
+                    entityCenter.x = (position.value.X + SIDEBAR_WIDTH) * gameData.mapScale;
+                    entityCenter.y = position.value.Y * gameData.mapScale;
+                    newDstRect.x = int((position.value.X + SIDEBAR_WIDTH) * gameData.mapScale - newDstRect.w / 2.0);
+                    newDstRect.y = int(position.value.Y * gameData.mapScale - newDstRect.h / 2.0);
                 } else {
-                    entityCenter.x = int(dstRect->x + dstRect->w / 2.0);
-                    entityCenter.y = int(dstRect->y + dstRect->h / 2.0);
+                    entityCenter.x = int(dstRect->x * gameData.mapScale + (dstRect->w * gameData.mapScale) / 2.0);
+                    entityCenter.y = int(dstRect->y * gameData.mapScale + (dstRect->h * gameData.mapScale) / 2.0);
                 }
 
                 if (currentEntity != entity) {
                     auto draggableP = currentEntity->getComponent<Draggable>();
                     bool isRed = draggableP ? !draggableP->isPlaceable : false;
                     float range = currentEntity->getComponent<Range>()->value;
-                    filledCircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range, isRed ? 255 : 0, 0, 0,
+                    filledCircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range* gameData.mapScale, isRed ? 255 : 0, 0, 0,
                                      100);
-                    aacircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range, isRed ? 255 : 0, 0, 0, 150);
+                    aacircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range* gameData.mapScale, isRed ? 255 : 0, 0, 0, 150);
                 }
                 if (entity == currentEntity) {
                     SDL_RenderCopyEx(gameData.renderer, visibility.getTexture(), nullptr, &newDstRect, visibility.angle,
@@ -66,7 +67,10 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
             }
         }
     }
+    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 10) * gameData.mapScale, 10 * gameData.mapScale,
+            "Cash: %s", std::to_string(gameData.money).c_str());
     SDL_RenderPresent(gameData.renderer);
+
 }
 
 

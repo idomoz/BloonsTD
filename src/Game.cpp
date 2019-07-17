@@ -58,34 +58,34 @@ Game::Game(bool fullscreen, float mapScale) {
     tower->addComponent<ShotKind>(DART);
     SDL_Surface *surface = gameData.assets["SuperMonkey"];
     tower->addComponent<Visibility>(gameData.renderer, surface,
-                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 10, int(surface->w / 1.5), 0});
+                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 10, 100, int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
     tower->addComponent<Range>(100);
     tower->addComponent<AttackSpeed>(30);
     tower->addComponent<Pierce>(4);
-    tower->addComponent<Damage>(21);
+    tower->addComponent<Damage>(100);
     tower->addComponent<Distance>(150);
     tower->addComponent<Type>(TOWER_T);
     layers[MENU_LAYER].emplace_back(tower);
     tower = new Entity();
     tower->addComponent<Kind>(SNIPER_MONKEY);
-    tower->addComponent<ShotKind>(DART);
+    tower->addComponent<ShotKind>(GUN);
     surface = gameData.assets["SniperMonkey"];
     tower->addComponent<Visibility>(gameData.renderer, surface,
-                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 10, int(surface->w / 1.5), 0});
+                                    SDL_Rect{SIDEBAR_WIDTH + MAP_WIDTH + 100, 100, int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
-    tower->addComponent<Range>(100);
-    tower->addComponent<AttackSpeed>(6);
-    tower->addComponent<Pierce>(5);
-    tower->addComponent<Damage>(1);
-    tower->addComponent<Distance>(300);
+    tower->addComponent<Range>(500);
+    tower->addComponent<AttackSpeed>(2);
+    tower->addComponent<Pierce>(1);
+    tower->addComponent<Damage>(3);
+    tower->addComponent<Distance>(600);
     tower->addComponent<Type>(TOWER_T);
     layers[MENU_LAYER].emplace_back(tower);
 
 
     // Sequences
     auto s = new Entity();
-    s->addComponent<Sequence>(1, 1, 0);
+    s->addComponent<Sequence>(1, 0.5, 0);
     s->addComponent<Kind>(BAD);
     s->addComponent<Type>(SEQUENCE_T);
     layers[SEQUENCES_LAYER].emplace_back(s);

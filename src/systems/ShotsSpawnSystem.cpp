@@ -50,19 +50,30 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
             int amount = attackSpeed.getAmountReady();
             float angle = twoPointsAngle(towerPosition.value, target->getComponent<Position>()->value);
             for (int i = 0; i < amount; ++i) {
-                EntityP shot(new Entity());
-                shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
-                shot->addComponent<Type>(SHOT_T);
-                shot->addComponent<Kind>(shotKind.value);
-                auto[velocityX, velocityY] = polarToCartesian(angle, getSpeed(shot));
-                shot->addComponent<Velocity>(velocityX, velocityY);
-                shot->addComponent<Range>(5);
-                shot->addComponents(pierce, damage, distance);
-                shot->addComponent<PoppedBloons>();
-                SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
-                shot->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 25},
-                                               radToDeg(angle));
-                layers[SHOTS_LAYER].emplace_back(shot);
+                switch (shotKind.value){
+                    case DART:{
+                        EntityP shot(new Entity());
+                        shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
+                        shot->addComponent<Type>(SHOT_T);
+                        shot->addComponent<Kind>(shotKind.value);
+                        auto[velocityX, velocityY] = polarToCartesian(angle, getSpeed(shot));
+                        shot->addComponent<Velocity>(velocityX, velocityY);
+                        shot->addComponent<Range>(5);
+                        shot->addComponents(pierce, damage, distance);
+                        shot->addComponent<PoppedBloons>();
+                        SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
+                        shot->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 25},
+                                                       radToDeg(angle));
+                        layers[SHOTS_LAYER].emplace_back(shot);
+                        break;
+                    }
+                    case GUN:
+                    {
+                        target->addComponent<DamageEvent>(damage.value,EntityP(nullptr));
+                    }
+
+                }
+
             }
             visibility.angle = radToDeg(angle) + 90;
         } else

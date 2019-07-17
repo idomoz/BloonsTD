@@ -12,6 +12,8 @@
 #include "Entity.h"
 #include "Settings.h"
 #include "SDL.h"
+#include "SDL_FontCache.h"
+
 constexpr char FREE = 0;
 constexpr char OBSTACLE = 1;
 constexpr char TOWER = 2;
@@ -20,6 +22,7 @@ class GameData {
 public:
     bool isRunning = true;
     bool isDragging = false;
+    int money = 0;
     int level = 0;
     int map = 0;
     float mapScale;
@@ -32,7 +35,7 @@ public:
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     EntityP selected;
-
+    FC_Font* font;
     ~GameData();
 };
 
