@@ -48,8 +48,8 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                 mouseY <= entityY + h) {
                                 switch (action.actionType) {
                                     case DRAG: {
-                                        auto[type, kind,shotKind, range, attackInterval, pierce, damage, distance] =
-                                        entity->getComponents<Type, Kind,ShotKind, Range, AttackSpeed, Pierce, Damage, Distance>().value();
+                                        auto[type, kind, shotKind, range, attackInterval, pierce, damage, distance, cost] =
+                                        entity->getComponents<Type, Kind, ShotKind, Range, AttackSpeed, Pierce, Damage, Distance, Cost>().value();
                                         auto draggable = new Entity();
                                         SDL_Surface *surface = gameData.assets[getSurfaceName(entity)];
                                         draggable->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{
@@ -58,8 +58,14 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         draggable->addComponent<Draggable>();
                                         draggable->addComponent<Action>(DROP);
                                         draggable->addComponents(type, kind, shotKind, range, attackInterval,
-                                                                 pierce, damage, distance);
+                                                                 pierce, damage, distance, cost);
                                         draggable->addComponent<Strategy>(FIRST);
+                                        if(auto spreadP = entity->getComponent<Spread>())
+                                            draggable->addComponent<Spread>(*spreadP);
+                                        if(auto gooP = entity->getComponent<Goo>())
+                                            draggable->addComponent<Goo>(*gooP);
+                                        if(entity->getComponent<Camo>())
+                                            draggable->addComponent<Camo>();
                                         EntityP ptr(draggable);
                                         gameData.selected = ptr;
                                         auto rangeShadow = new Entity();
@@ -71,6 +77,18 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                     }
 
                                     case CLICK: {
+                                        switch (entity->getComponent<Kind>()->value) {
+                                            case PLAY_FAST_FORWARD: {
+                                                if (gameData.levelRunning)
+                                                    gameData.FPS = 240 - gameData.FPS;
+                                                else
+                                                    gameData.levelRunning = true;
+                                                visibility.loadTexture(gameData.renderer,
+                                                                       gameData.assets[std::string("FastForward") +
+                                                                                       (gameData.FPS == 180 ? "Enabled"
+                                                                                                            : "")]);
+                                            }
+                                        }
                                         goto entityClicked;
                                     }
                                     case DROP: {
@@ -92,6 +110,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                     }
                                                 }
                                                 if (i == MENU_LAYER) {
+                                                    gameData.cash -= entity->getComponent<Cost>()->value;
                                                     entity->addComponent<MoveEntityEvent>(TOWERS_LAYER);
                                                     auto &visibility = *entity->getComponent<Visibility>();
                                                     SDL_Rect *dstRect = entity->getComponent<Visibility>()->getDstRect();

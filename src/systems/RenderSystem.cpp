@@ -4,7 +4,15 @@
 
 #include "RenderSystem.h"
 
-
+std::string formatCommas(int num){
+    std::string numWithCommas = std::to_string(num);
+    int insertPosition = numWithCommas.length() - 3;
+    while (insertPosition > 0) {
+        numWithCommas.insert(insertPosition, ",");
+        insertPosition-=3;
+    }
+    return numWithCommas;
+}
 void RenderSystem::init(GameData &gameData) {
     if (gameData.window != nullptr)
         SDL_DestroyWindow(gameData.window);
@@ -20,7 +28,7 @@ void RenderSystem::init(GameData &gameData) {
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
     gameData.font = FC_CreateFont();
     FC_LoadFont(gameData.font, gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 12 * gameData.mapScale,
-                FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
+                FC_MakeColor(255,255,255, 255), TTF_STYLE_NORMAL);
 }
 
 void RenderSystem::update(Entities *layers, GameData &gameData) {
@@ -67,8 +75,15 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
             }
         }
     }
-    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 10) * gameData.mapScale, 10 * gameData.mapScale,
-            "Cash: %s", std::to_string(gameData.money).c_str());
+    if(gameData.cash > 99999999)
+        gameData.cash = 99999999;
+
+    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 45) * gameData.mapScale, 14 * gameData.mapScale,
+            formatCommas(gameData.cash).c_str());
+    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 45) * gameData.mapScale, 36 * gameData.mapScale,
+            std::to_string(gameData.lives).c_str());
+    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 160) * gameData.mapScale, 22 * gameData.mapScale,
+            "Level: %s",std::to_string(gameData.level).c_str());
     SDL_RenderPresent(gameData.renderer);
 
 }

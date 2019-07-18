@@ -40,11 +40,8 @@ enum ComponentType {
     REGROW,
     CAMO,
     FORTIFIED,
-    GLUE,
-    GUM,
-    CORROSIVE,
+    GOO,
     COST,
-    VALUE,
     POPPED_BLOONS,
 
     MOVE_ENTITY_EVENT,

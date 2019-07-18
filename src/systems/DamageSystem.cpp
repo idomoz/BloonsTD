@@ -32,10 +32,8 @@ bool didBloonPop(EntityP &bloon, int &lives, int &damage, int minLives) {
 }
 
 EntityP
-spawnBloon(Entities &newBloons, GameData &gameData, BloonKinds kind, EntityP &shot, int lives, float progress,
-           bool regrow, bool camo,
-           bool fortified, bool gum,
-           bool glue, bool corrosive) {
+spawnBloon(Entities &newBloons, GameData &gameData, int kind, EntityP &shot, int lives, float progress,
+           int regrow, bool camo, bool fortified, Goo* gooP) {
     EntityP newBloon(new Entity());
     if (shot)
         shot->getComponent<PoppedBloons>()->value.emplace(newBloon.get());
@@ -43,20 +41,15 @@ spawnBloon(Entities &newBloons, GameData &gameData, BloonKinds kind, EntityP &sh
     newBloon->addComponent<Kind>(kind);
     newBloon->addComponent<Lives>(lives);
     newBloon->addComponent<Position>(gameData.startingPoint);
-    newBloon->addComponent<PathIndex>(0);
-    newBloon->getComponent<PathIndex>()->progress = progress;
+    newBloon->addComponent<PathIndex>(0, progress);
     if (regrow)
-        newBloon->addComponent<Regrow>();
+        newBloon->addComponent<Regrow>(regrow);
     if (camo)
         newBloon->addComponent<Camo>();
     if (fortified)
         newBloon->addComponent<Fortified>();
-    if (gum)
-        newBloon->addComponent<Gum>();
-    else if (glue)
-        newBloon->addComponent<Glue>();
-    else if (corrosive)
-        newBloon->addComponent<Corrosive>();
+    if (gooP)
+        newBloon->addComponent<Goo>(*gooP);
     SDL_Surface *surface = gameData.assets[getSurfaceName(newBloon)];
     newBloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
     newBloon->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 3, 0});
@@ -69,7 +62,7 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
         return;
     auto &lives = bloon->getComponent<Lives>()->value;
     if (damage >= lives) {
-        gameData.money += getBloonProperty<YIELD>(bloon);
+        gameData.cash += getBloonProperty<YIELD>(bloon);
         bloon->addComponent<RemoveEntityEvent>();
         return;
     }
@@ -87,13 +80,13 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
             return;
     }
     if (kind > PINK_BLOON) {
-        gameData.money += 1;
+        gameData.cash += 1;
         bloon->addComponent<RemoveEntityEvent>();
     }
-    auto[regrowP, camoP, fortifiedP, glueP, gumP, corrosiveP] = bloon->getComponentsP<Regrow, Camo, Fortified, Glue, Gum, Corrosive>();
+    auto[regrowP, camoP, fortifiedP, gooP] = bloon->getComponentsP<Regrow, Camo, Fortified,  Goo>();
     switch (kind) {
         case RED_BLOON:
-            lives -= damage;
+            lives -= 1;
             break;
         case BLUE_BLOON:
         case GREEN_BLOON:
@@ -102,11 +95,13 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
             lives -= damage;
             if (fortifiedP and damage == 1 and lives % 2 == 1)
                 break;
-            gameData.money += kind - ((fortifiedP ? lives / 2 : lives) - 1);
+            gameData.cash += kind - ((fortifiedP ? lives / 2 : lives) - 1);
             kind = (fortifiedP ? lives / 2 : lives) - 1;
             surface = gameData.assets[getSurfaceName(bloon)];
             visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
             visibility.loadTexture(gameData.renderer, surface);
+            if (regrowP)
+                regrowP->regrowTime = 60;
             bloon->getComponent<Range>()->value = std::max(surface->w / 6, surface->h / 6);
             break;
         }
@@ -116,8 +111,8 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
             for (int i = 0; i < 2; ++i) {
                 EntityP newBloon = spawnBloon(newBloons, gameData, PINK_BLOON, shot, lives / 2,
                                               i == 0 ? std::fmaxf(0, progress - 10) : std::fminf(
-                                                      gameData.path.size() - 1, progress + 10), regrowP, camoP, false,
-                                              gumP, glueP, corrosiveP);
+                                                      gameData.path.size() - 1, progress + 10),
+                                              regrowP ? regrowP->kind : 0, camoP, false, gooP);
                 damageBloon(newBloon, shot, i == 0 ? ceilf(damage / 2.0) : floorf(damage / 2.0), gameData, newBloons);
             }
             break;
@@ -126,8 +121,8 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
             for (int i = 0; i < 2; ++i) {
                 EntityP newBloon = spawnBloon(newBloons, gameData, i == 0 ? BLACK_BLOON : WHITE_BLOON, shot, lives / 2,
                                               i == 0 ? std::fmaxf(0, progress - 10) : std::fminf(
-                                                      gameData.path.size() - 1, progress + 10), regrowP, camoP, false,
-                                              gumP, glueP, corrosiveP);
+                                                      gameData.path.size() - 1, progress + 10),
+                                              regrowP ? regrowP->kind : 0, camoP, false,gooP);
                 damageBloon(newBloon, shot, i == 0 ? ceilf(damage / 2.0) : floorf(damage / 2.0), gameData, newBloons);
             }
             break;
@@ -136,10 +131,10 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
         case RAINBOW_BLOON:
         case CERAMIC_BLOON: {
             for (int i = 0; i < 2; ++i) {
-                EntityP newBloon = spawnBloon(newBloons, gameData, BloonKinds(kind - 1), shot, lives / 2,
+                EntityP newBloon = spawnBloon(newBloons, gameData, kind - 1, shot, lives / 2,
                                               i == 0 ? std::fmaxf(0, progress - 10) : std::fminf(
-                                                      gameData.path.size() - 1, progress + 10), regrowP, camoP, false,
-                                              gumP, glueP, corrosiveP);
+                                                      gameData.path.size() - 1, progress + 10),
+                                              regrowP ? regrowP->kind : 0, camoP, false,gooP);
                 damageBloon(newBloon, shot, i == 0 ? ceilf(damage / 2.0) : floorf(damage / 2.0), gameData,
                             newBloons);
             }
@@ -150,11 +145,11 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
         case ZOMG:
         case DDT: {
             for (int i = 0; i < 4; ++i) {
-                EntityP newBloon = spawnBloon(newBloons, gameData, kind == DDT ? CERAMIC_BLOON : BloonKinds(kind - 1),
+                EntityP newBloon = spawnBloon(newBloons, gameData, kind == DDT ? CERAMIC_BLOON : kind - 1,
                                               shot, lives / 4,
                                               (i < 2 ? std::fmaxf(0, progress - 20 + 10 * (i % 2)) : std::fminf(
                                                       gameData.path.size() - 1, progress + 20 - 10 * (i % 2))),
-                                              kind == DDT, kind == DDT, fortifiedP, false, false, false);
+                                              kind == DDT ? CERAMIC_BLOON : 0, kind == DDT, fortifiedP, nullptr);
                 damageBloon(newBloon, shot, i == 0 ? ceilf(damage / 4.0) : damage - ceilf(damage / 4.0) * 3,
                             gameData, newBloons);
             }
@@ -190,13 +185,15 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
 }
 
 void DamageSystem::update(Entities *layers, GameData &gameData) {
+    if(!gameData.levelRunning)
+        return;
     Entities newBloons;
     for (auto &bloon: layers[BLOONS_LAYER]) {
         if (auto damageEventP = bloon->getComponent<DamageEvent>()) {
             auto &damageEvent = *damageEventP;
             auto &lives = bloon->getComponent<Lives>()->value;
             if (lives < damageEvent.damage) {
-                gameData.money += getBloonProperty<YIELD>(bloon);
+                gameData.cash += getBloonProperty<YIELD>(bloon);
                 bloon->addComponent<RemoveEntityEvent>();
             } else {
                 damageBloon(bloon, damageEvent.shot, damageEvent.damage, gameData, newBloons);

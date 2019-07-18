@@ -25,25 +25,32 @@
 #include "systems/RemoveEntitiesSystem.h"
 #include "systems/CollisionSystem.h"
 #include "systems/DamageSystem.h"
+#include "systems/CashSystem.h"
+#include "systems/LoadLevelSystem.h"
 #include "GameData.h"
 #include "boost/filesystem.hpp"
 #include <iostream>
-struct TempPoint{short X;short Y;};
+
+struct TempPoint {
+    short X;
+    short Y;
+};
+
 class Game {
     std::vector<std::unique_ptr<System>> systems;
     Entities layers[N_LAYERS];
-    RenderSystem * renderSystem;
+    RenderSystem *renderSystem;
+public:
     GameData gameData;
 
-
-public:
-    explicit Game(bool fullscreen, float mapScale=1.5);
+    explicit Game(bool fullscreen, float mapScale = 1.5);
 
     ~Game();
 
     void update();
 
     bool running() { return gameData.isRunning; }
+
     void loadMap();
 };
 

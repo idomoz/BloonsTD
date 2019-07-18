@@ -6,10 +6,17 @@
 
 
 void BloonsSpawnSystem::update(Entities *layers, GameData &gameData) {
+    if(!gameData.levelRunning)
+        return;
     for (auto &entity: layers[SEQUENCES_LAYER]) {
         auto[sequence, kind] = entity->getComponents<Sequence, Kind>().value();
         auto [regrowP,camoP,fortifiedP] = entity->getComponentsP<Regrow,Camo,Fortified>();
         int amount = sequence.getAmountReady();
+        if(amount == SEQUENCE_FINISHED)
+        {
+            entity->addComponent<RemoveEntityEvent>();
+            continue;
+        }
         for (int j = 0; j < amount; ++j) {
             EntityP bloon(new Entity());
             bloon->addComponent<Type>(BLOON_T);
@@ -18,7 +25,7 @@ void BloonsSpawnSystem::update(Entities *layers, GameData &gameData) {
 
             bloon->addComponents(kind);
             if (regrowP)
-                bloon->addComponent<Regrow>();
+                bloon->addComponent<Regrow>(*regrowP);
             if (camoP)
                 bloon->addComponent<Camo>();
             if (fortifiedP)

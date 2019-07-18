@@ -25,6 +25,8 @@
 #include "components/DamageEvent.h"
 #include "components/PoppedBloons.h"
 #include "components/MoveEntityEvent.h"
+#include "components/Regrow.h"
+#include "components/Goo.h"
 
 typedef std::vector<EntityP> Entities;
 
@@ -52,36 +54,42 @@ int getBloonProperty(EntityP &entity) {
     auto fortifiedP = entity->getComponent<Fortified>();
     switch (entity->getComponent<Kind>()->value) {
         case RED_BLOON:
-            yield = totalLives = 1;
+            yield = totalLives = selfLives = 1;
             break;
         case BLUE_BLOON:
-            yield = totalLives = 2;
+            yield = totalLives = selfLives = 2;
             break;
         case GREEN_BLOON:
-            yield = totalLives = 3;
+            yield = totalLives = selfLives = 3;
             break;
         case YELLOW_BLOON:
-            yield = totalLives = 4;
+            yield = totalLives = selfLives = 4;
             break;
         case PINK_BLOON:
-            yield = totalLives = 5;
+            yield = totalLives = selfLives = 5;
             break;
         case PURPLE_BLOON:
+            selfLives = 1;
             yield = totalLives = 11;
             break;
         case WHITE_BLOON:
+            selfLives = 1;
             yield = totalLives = 11;
             break;
         case BLACK_BLOON:
+            selfLives = 1;
             yield = totalLives = 11;
             break;
         case ZEBRA_BLOON:
+            selfLives = 1;
             yield = totalLives = 23;
             break;
         case LEAD_BLOON:
+            selfLives = 1;
             yield = totalLives = 23;
             break;
         case RAINBOW_BLOON:
+            selfLives = 1;
             yield = totalLives = 47;
             break;
         case CERAMIC_BLOON:

@@ -10,7 +10,9 @@
 enum ActionType {
     DRAG, CLICK, DROP, SELECT
 };
-
+enum Buttons {
+    PLAY_FAST_FORWARD
+};
 class Action : public Component {
 
 public:

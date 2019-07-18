@@ -20,10 +20,16 @@ constexpr char TOWER = 2;
 
 class GameData {
 public:
+    int FPS = 60;
     bool isRunning = true;
+    bool lost = false;
     bool isDragging = false;
-    int money = 0;
-    int level = 0;
+    int cash = 1000;
+    bool levelRunning = false;
+    bool levelReady = false;
+    int lives = 200;
+    int level = 1;
+    int finalLevel = 2;
     int map = 0;
     float mapScale;
     bool fullscreen;
@@ -36,6 +42,7 @@ public:
     SDL_Renderer *renderer = nullptr;
     EntityP selected;
     FC_Font* font;
+    EntityP playButton;
     ~GameData();
 };
 

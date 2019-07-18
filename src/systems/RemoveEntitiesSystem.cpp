@@ -20,4 +20,10 @@ void RemoveEntitiesSystem::update(Entities *layers, GameData &gameData) {
                 }),
                 layers[i].end());
     }
+    if (layers[SEQUENCES_LAYER].empty() and layers[BLOONS_LAYER].empty()) {
+        gameData.levelReady = gameData.levelRunning = false;
+        if (gameData.level <= gameData.finalLevel)
+            gameData.level += 1;
+        gameData.playButton->getComponent<Visibility>()->loadTexture(gameData.renderer, gameData.assets["Play"]);
+    }
 }

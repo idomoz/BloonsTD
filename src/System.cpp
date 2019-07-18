@@ -9,7 +9,7 @@ std::string getSurfaceName(EntityP &entity) {
     int damageStateLives = getBloonProperty<SELF_LIVES>(entity) / 5;
     switch (entity->getComponent<Type>()->value) {
         case BLOON_T: {
-            auto[regrowP, camoP, fortifiedP, glueP, gumP, corrosiveP, lives] = entity->getComponentsP<Regrow, Camo, Fortified, Glue, Gum, Corrosive, Lives>();
+            auto[regrowP, camoP, fortifiedP, gooP, lives] = entity->getComponentsP<Regrow, Camo, Fortified, Goo, Lives>();
             switch (entity->getComponent<Kind>()->value) {
                 case RED_BLOON:
                     surfaceName = "Red";
@@ -75,12 +75,18 @@ std::string getSurfaceName(EntityP &entity) {
                 if (int damageState = (maxLives - lives->value) / damageStateLives)
                     surfaceName += "DamageState" + std::to_string(damageState);
             }
-            if (gumP)
-                surfaceName += "Gum";
-            else if (glueP)
-                surfaceName += "Glue";
-            else if (corrosiveP)
-                surfaceName += "Slime";
+            if (gooP)
+                switch (gooP->kind) {
+                    case GUM:
+                        surfaceName += "Gum";
+                        break;
+                    case GLUE:
+                        surfaceName += "Glue";
+                        break;
+                    case CORROSIVE:
+                        surfaceName += "Slime";
+                        break;
+                }
             break;
         }
         case TOWER_T: {
@@ -88,11 +94,20 @@ std::string getSurfaceName(EntityP &entity) {
                 case DART_MONKEY:
                     surfaceName = "DartMonkey";
                     break;
+                case TACK_SHOOTER:
+                    surfaceName = "TackShooter";
+                    break;
                 case SUPER_MONKEY:
                     surfaceName = "SuperMonkey";
                     break;
                 case SNIPER_MONKEY:
                     surfaceName = "SniperMonkey";
+                    break;
+                case BOMB_TOWER:
+                    surfaceName = "BombTower";
+                    break;
+                case GLUE_GUNNER:
+                    surfaceName = "GlueGunner";
                     break;
             }
             break;
@@ -100,15 +115,44 @@ std::string getSurfaceName(EntityP &entity) {
         case SHOT_T: {
             switch (entity->getComponent<Kind>()->value) {
                 case DART:
+                case RADIAL_DART:
                     surfaceName = "Dart";
                     break;
-                case GUN:
-                    surfaceName = "Dart";
+                case BOMB:
+                    surfaceName = "Bomb";
+                    break;
+                case EXPLOSION:
+                    surfaceName = "Explosion";
+                    break;
+                case GOO_SPLASH:
+                    switch (entity->getComponent<Goo>()->kind) {
+                        case GUM:
+                            surfaceName = "SplashGum";
+                            break;
+                        case GLUE:
+                            surfaceName = "SplashGlue";
+                            break;
+                        case CORROSIVE:
+                            surfaceName = "SplashSlime";
+                            break;
+                    }
+                    break;
+                case GOO_SHOT:
+                    switch (entity->getComponent<Goo>()->kind) {
+                        case GUM:
+                            surfaceName = "SplashGum";
+                            break;
+                        case GLUE:
+                            surfaceName = "SplashGlue";
+                            break;
+                        case CORROSIVE:
+                            surfaceName = "SplashSlime";
+                            break;
+                    }
                     break;
             }
             break;
         }
-
     }
     return surfaceName;
 }
@@ -117,7 +161,7 @@ float getSpeed(EntityP &entity) {
     float speed;
     switch (entity->getComponent<Type>()->value) {
         case BLOON_T: {
-            auto[glueP, gumP, corrosiveP] = entity->getComponentsP<Glue, Gum, Corrosive>();
+            auto gooP = entity->getComponent<Goo>();
             switch (entity->getComponent<Kind>()->value) {
                 case RED_BLOON:
                     speed = 3 * BPS;
@@ -171,19 +215,26 @@ float getSpeed(EntityP &entity) {
                     speed = 0.2 * BPS;
                     break;
             }
-            if (gumP or corrosiveP)
-                speed *= 0.8;
-            else if (glueP)
-                speed = 0;
+            if (gooP)
+                switch (gooP->kind) {
+                    case CORROSIVE:
+                    case GUM:
+                        speed *= 0.5;
+                        break;
+                    case GLUE:
+                        speed = 0;
+                }
             break;
         }
         case SHOT_T: {
             switch (entity->getComponent<Kind>()->value) {
                 case DART:
+                case RADIAL_DART:
                     speed = 12;
                     break;
-                case GUN:
-                    speed = 65;
+                case BOMB:
+                case GOO_SHOT:
+                    speed = 10;
                     break;
             }
             break;

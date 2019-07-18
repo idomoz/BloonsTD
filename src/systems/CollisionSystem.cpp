@@ -59,6 +59,8 @@ void insertionSort(Entities &layer) {
 }
 
 void CollisionSystem::update(Entities *layers, GameData &gameData) {
+    if (!gameData.levelRunning)
+        return;
     Entities &bloonsLayer = layers[BLOONS_LAYER];
     Entities &shotsLayer = layers[SHOTS_LAYER];
     insertionSort(bloonsLayer);
@@ -106,10 +108,55 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
         }
     }
     for (auto[shot, bloon, _] :collided) {
-        auto[pierce, damage] = shot->getComponents<Pierce, Damage>().value();
-        if (pierce.value > 0) {
-            bloon->addComponent<DamageEvent>(damage.value,shot);
-            if (--pierce.value == 0)
+        auto[pierce, damage, kind, position] = shot->getComponents<Pierce, Damage, Kind, Position>().value();
+        int bloonKind = bloon->getComponent<Kind>()->value;
+        if (kind.value == EXPLOSION or kind.value == GOO_SPLASH or pierce.value > 0) {
+            switch (kind.value) {
+                case DART:
+                    if (bloonKind != LEAD_BLOON)
+                        bloon->addComponent<DamageEvent>(damage.value, shot);
+                    break;
+                case EXPLOSION:
+                    if (bloonKind != BLACK_BLOON and bloonKind != ZEBRA_BLOON)
+                        bloon->addComponent<DamageEvent>(damage.value, shot);
+                    break;
+                case GOO_SPLASH: {
+                    bloon->addComponent<DamageEvent>(damage.value, shot);
+                    if (!bloon->getComponent<Goo>()) {
+                        bloon->addComponent<Goo>(*shot->getComponent<Goo>());
+                        SDL_Surface *surface = gameData.assets[getSurfaceName(bloon)];
+                        auto &visibility = *bloon->getComponent<Visibility>();
+                        visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
+                        visibility.loadTexture(gameData.renderer, surface);
+                    }
+                    break;
+                }
+                case BOMB:
+                case GOO_SHOT:
+                    EntityP explosion(new Entity());
+                    explosion->addComponent<Position>(position.value.X, position.value.Y);
+                    explosion->addComponent<Type>(SHOT_T);
+                    switch (kind.value) {
+                        case BOMB:
+                            explosion->addComponent<Kind>(EXPLOSION);
+                            break;
+                        case GOO_SHOT:
+                            explosion->addComponent<Kind>(GOO_SPLASH);
+                            explosion->addComponent<Goo>(*shot->getComponent<Goo>());
+                            break;
+                    }
+                    explosion->addComponent<Pierce>(1);
+                    explosion->addComponent<PoppedBloons>();
+                    explosion->addComponent<Range>(shot->getComponent<Spread>()->value);
+                    explosion->addComponents(damage);
+                    SDL_Surface *surface = gameData.assets[getSurfaceName(explosion)];
+                    explosion->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 2});
+                    layers[SHOTS_LAYER].emplace_back(explosion);
+                    shot->addComponent<RemoveEntityEvent>();
+                    break;
+            }
+
+            if (kind.value == EXPLOSION or kind.value == GOO_SPLASH or --pierce.value == 0)
                 shot->addComponent<RemoveEntityEvent>();
         }
     }
