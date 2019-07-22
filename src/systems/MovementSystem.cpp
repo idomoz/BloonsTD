@@ -113,8 +113,8 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                     float speed = getSpeed(entity);
                     if (auto gooP = entity->getComponent<Goo>()) {
                         if (gooP->kind == CORROSIVE and --gooP->timetoRecharge == 0){
-                            entity->addComponent<DamageEvent>(1, EntityP(nullptr));
-                            gooP->timetoRecharge = 60;
+                            entity->addComponent<DamageEvent>(gooP->damage, EntityP(nullptr));
+                            gooP->timetoRecharge = gooP->interval;
                         }
                         gooP->ttl -= 1;
                         if (gooP->ttl == 0) {

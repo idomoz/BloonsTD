@@ -9,5 +9,8 @@ GameData::~GameData() {
     }
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
-    FC_FreeFont(font);
+    for (int i = 0; i < FONTS_LENGTH; ++i) {
+        FC_FreeFont(fonts[i]);
+    }
+
 }

@@ -11,10 +11,14 @@ class Goo : public Component {
 public:
     int kind;
     int ttl;
-    int timetoRecharge = 60;
+    int interval;
+    int timetoRecharge;
+    bool soak = false;
+    int damage = 1;
+    float stickness = 0.6;
     static constexpr ComponentType type = ComponentType::GOO;
 
-    Goo(int kind, int ttl) : kind(kind), ttl(ttl) {}
+    Goo(int kind, int ttl, int interval=60) : kind(kind), ttl(ttl), timetoRecharge(interval),interval(interval) {}
 };
 
 #endif //SDL_GAME_GOO_H

@@ -20,10 +20,11 @@ class Visibility : public Component {
     std::optional<SDL_Rect> dstRect;
 public:
     float angle = 0;
+    bool hidden = false;
     static constexpr ComponentType type = ComponentType::VISIBILITY;
 
     Visibility(SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR = std::nullopt,
-               float angle = 0);
+               float angle = 0,bool hidden = false);
 
 
     ~Visibility() override;

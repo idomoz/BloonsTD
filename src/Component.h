@@ -31,6 +31,7 @@ enum ComponentType {
     DAMAGE,
     PIERCE,
     SPREAD,
+    SHOTS_AMOUNT,
     DISTANCE,
     SEQUENCE,
     ACTION,
@@ -43,6 +44,8 @@ enum ComponentType {
     GOO,
     COST,
     POPPED_BLOONS,
+    UPGRADES,
+    UPGRADE_P,
 
     MOVE_ENTITY_EVENT,
     REMOVE_ENTITY_EVENT,

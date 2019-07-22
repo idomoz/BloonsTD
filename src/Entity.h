@@ -7,6 +7,7 @@
 
 #include <bitset>
 #include <vector>
+#include <array>
 #include <cmath>
 #include <memory>
 #include <optional>
@@ -23,7 +24,7 @@ constexpr uint64_t createMask(std::initializer_list<int> types) noexcept {
 class Entity {
 
     std::bitset<ComponentType::LENGTH> componentsMask;
-    std::unique_ptr<Component> components[ComponentType::LENGTH];
+    std::array<std::unique_ptr<Component>,ComponentType::LENGTH> components;
 public:
     template<class ... T>
     std::optional<std::tuple<T &...>> getComponents() {
@@ -57,7 +58,7 @@ public:
     }
 
     template<typename T, typename ... Targs>
-    Component &addComponent(Targs &&... args) {
+    T &addComponent(Targs &&... args) {
         T *c = new T(std::forward<Targs>(args)...);
         components[T::type] = std::move(std::unique_ptr<Component>(c));
         componentsMask[T::type] = true;

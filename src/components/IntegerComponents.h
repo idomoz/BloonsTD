@@ -21,7 +21,7 @@ enum Types {
 enum Strategies {
     FIRST, LAST, CLOSEST, STRONGEST
 };
-enum BloonKinds{
+enum BloonKinds {
     RED_BLOON,
     BLUE_BLOON,
     GREEN_BLOON,
@@ -40,7 +40,7 @@ enum BloonKinds{
     DDT,
     BAD
 };
-enum TowerKinds{
+enum TowerKinds {
     DART_MONKEY,
     TACK_SHOOTER,
     SUPER_MONKEY,
@@ -48,10 +48,13 @@ enum TowerKinds{
     BOMB_TOWER,
     GLUE_GUNNER,
 };
-enum ShotKinds{
+enum ShotKinds {
+    SPIKE,
+    JUGGERNAUT,
     DART,
     RADIAL_DART,
-    GUN,
+    BULLET,
+    ENHANCED_BULLET,
     BOMB,
     EXPLOSION,
     GOO_SHOT,
@@ -59,16 +62,28 @@ enum ShotKinds{
     GLUE,
     GUM,
     CORROSIVE,
+    LASER,
+    PLASMA,
+    SUN
 };
 
-INTEGER_COMPONENT(Lives,LIVES);
-INTEGER_COMPONENT(Damage,DAMAGE);
-INTEGER_COMPONENT(Pierce,PIERCE);
-INTEGER_COMPONENT(Type,TYPE);
-INTEGER_COMPONENT(Strategy,STRATEGY);
-INTEGER_COMPONENT(Cost,COST);
-INTEGER_COMPONENT(Kind,KIND);
-INTEGER_COMPONENT(ShotKind,SHOT_KIND);
+INTEGER_COMPONENT(Lives, LIVES);
+
+INTEGER_COMPONENT(Damage, DAMAGE);
+
+INTEGER_COMPONENT(Pierce, PIERCE);
+
+INTEGER_COMPONENT(Type, TYPE);
+
+INTEGER_COMPONENT(Strategy, STRATEGY);
+
+INTEGER_COMPONENT(Cost, COST);
+
+INTEGER_COMPONENT(Kind, KIND);
+
+INTEGER_COMPONENT(ShotKind, SHOT_KIND);
+
+INTEGER_COMPONENT(ShotsAmount, SHOTS_AMOUNT);
 
 
 #endif //SDL_GAME_INTEGERCOMPONENTS_H

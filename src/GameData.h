@@ -24,7 +24,7 @@ public:
     bool isRunning = true;
     bool lost = false;
     bool isDragging = false;
-    int cash = 1000;
+    int cash = 100000;
     bool levelRunning = false;
     bool levelReady = false;
     int lives = 200;
@@ -41,7 +41,7 @@ public:
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     EntityP selected;
-    FC_Font* font;
+    FC_Font* fonts[FONTS_LENGTH];
     EntityP playButton;
     ~GameData();
 };

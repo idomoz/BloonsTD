@@ -4,15 +4,16 @@
 
 #include "RenderSystem.h"
 
-std::string formatCommas(int num){
+std::string formatCommas(int num) {
     std::string numWithCommas = std::to_string(num);
     int insertPosition = numWithCommas.length() - 3;
     while (insertPosition > 0) {
         numWithCommas.insert(insertPosition, ",");
-        insertPosition-=3;
+        insertPosition -= 3;
     }
     return numWithCommas;
 }
+
 void RenderSystem::init(GameData &gameData) {
     if (gameData.window != nullptr)
         SDL_DestroyWindow(gameData.window);
@@ -26,18 +27,58 @@ void RenderSystem::init(GameData &gameData) {
     gameData.renderer = SDL_CreateRenderer(gameData.window, -1, 0);
     SDL_SetRenderDrawColor(gameData.renderer, 255, 255, 255, 255);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
-    gameData.font = FC_CreateFont();
-    FC_LoadFont(gameData.font, gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 12 * gameData.mapScale,
-                FC_MakeColor(255,255,255, 255), TTF_STYLE_NORMAL);
+
+    gameData.fonts[WHITE12] = FC_CreateFont();
+    FC_LoadFont(gameData.fonts[WHITE12], gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 12 * gameData.mapScale,
+                FC_MakeColor(255, 255, 255, 255), TTF_STYLE_NORMAL);
+    gameData.fonts[BLACK12] = FC_CreateFont();
+    FC_LoadFont(gameData.fonts[BLACK12], gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 12 * gameData.mapScale,
+                FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
+    gameData.fonts[RED12] = FC_CreateFont();
+    FC_LoadFont(gameData.fonts[RED12], gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 12 * gameData.mapScale,
+                FC_MakeColor(255, 49, 49, 255), TTF_STYLE_NORMAL);
+    gameData.fonts[WHITE8] = FC_CreateFont();
+    FC_LoadFont(gameData.fonts[WHITE8], gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 10 * gameData.mapScale,
+                FC_MakeColor(255, 255, 255, 255), TTF_STYLE_NORMAL);
+    gameData.fonts[BLACK8] = FC_CreateFont();
+    FC_LoadFont(gameData.fonts[BLACK8], gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 10 * gameData.mapScale,
+                FC_MakeColor(0, 0, 0, 255), TTF_STYLE_NORMAL);
+    gameData.fonts[RED8] = FC_CreateFont();
+    FC_LoadFont(gameData.fonts[RED8], gameData.renderer, "../assets/LuckiestGuy-Regular.ttf", 10 * gameData.mapScale,
+                FC_MakeColor(255, 49, 49, 255), TTF_STYLE_NORMAL);
+
 }
 
 void RenderSystem::update(Entities *layers, GameData &gameData) {
-
     SDL_RenderClear(gameData.renderer);
     for (int i = 0; i < N_LAYERS; ++i) {
         if (i == SEQUENCES_LAYER)
             continue;
+
         for (auto &entity: layers[i]) {
+            if (i == MENU_LAYER) {
+                auto[visibilityP, kindP, actionP] = entity->getComponentsP<Visibility, Kind, Action>();
+                if (visibilityP and visibilityP->hidden)
+                    continue;
+                if (kindP and actionP and actionP->actionType == CLICK)
+                    switch (kindP->value) {
+                        case UPGRADE_PATH_1:
+                        case UPGRADE_PATH_2:
+                        case UPGRADE_PATH_3: {
+                            auto &upgradeP = *entity->getComponent<UpgradeP>();
+                            int path = kindP->value - UPGRADE_PATH_1;
+                            int cost = upgradeP.value->cost;
+                            FC_Draw(gameData.fonts[WHITE12], gameData.renderer, 24 * gameData.mapScale,
+                                    (67 + path * 135) * gameData.mapScale, upgradeP.value->name.c_str());
+                            int font = WHITE8;
+                            if (cost > gameData.cash)
+                                font = RED8;
+                            FC_Draw(gameData.fonts[font], gameData.renderer, 47 * gameData.mapScale,
+                                    (80 + path * 135) * gameData.mapScale, "$%s", formatCommas(cost).c_str());
+                            break;
+                        }
+                    }
+            }
             auto rangeShadowP = entity->getComponent<RangeShadow>();
             auto &currentEntity = rangeShadowP ? rangeShadowP->entity : entity;
             if (auto visibilityP = currentEntity->getComponent<Visibility>()) {
@@ -63,9 +104,11 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                     auto draggableP = currentEntity->getComponent<Draggable>();
                     bool isRed = draggableP ? !draggableP->isPlaceable : false;
                     float range = currentEntity->getComponent<Range>()->value;
-                    filledCircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range* gameData.mapScale, isRed ? 255 : 0, 0, 0,
+                    filledCircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range * gameData.mapScale,
+                                     isRed ? 255 : 0, 0, 0,
                                      100);
-                    aacircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range* gameData.mapScale, isRed ? 255 : 0, 0, 0, 150);
+                    aacircleRGBA(gameData.renderer, entityCenter.x, entityCenter.y, range * gameData.mapScale,
+                                 isRed ? 255 : 0, 0, 0, 150);
                 }
                 if (entity == currentEntity) {
                     SDL_RenderCopyEx(gameData.renderer, visibility.getTexture(), nullptr, &newDstRect, visibility.angle,
@@ -75,15 +118,43 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
             }
         }
     }
-    if(gameData.cash > 99999999)
+    if (gameData.cash > 99999999)
         gameData.cash = 99999999;
 
-    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 45) * gameData.mapScale, 14 * gameData.mapScale,
+    FC_Draw(gameData.fonts[WHITE12], gameData.renderer, (MAP_WIDTH + SIDEBAR_WIDTH + 45) * gameData.mapScale,
+            14 * gameData.mapScale,
             formatCommas(gameData.cash).c_str());
-    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 45) * gameData.mapScale, 36 * gameData.mapScale,
+    FC_Draw(gameData.fonts[WHITE12], gameData.renderer, (MAP_WIDTH + SIDEBAR_WIDTH + 45) * gameData.mapScale,
+            36 * gameData.mapScale,
             std::to_string(gameData.lives).c_str());
-    FC_Draw(gameData.font, gameData.renderer, (MAP_WIDTH+SIDEBAR_WIDTH + 160) * gameData.mapScale, 22 * gameData.mapScale,
-            "Level: %s",std::to_string(gameData.level).c_str());
+    FC_Draw(gameData.fonts[WHITE12], gameData.renderer, (MAP_WIDTH + SIDEBAR_WIDTH + 160) * gameData.mapScale,
+            22 * gameData.mapScale,
+            "Level: %s", std::to_string(gameData.level).c_str());
+    if (gameData.selected and !gameData.isDragging) {
+        std::string strategy;
+        int x;
+        switch (gameData.selected->getComponent<Strategy>()->value) {
+            case CLOSEST:
+                strategy = "Close";
+                x = 56;
+                break;
+            case FIRST:
+                strategy = "First";
+                x = 57;
+                break;
+            case LAST:
+                strategy = "Last";
+                x = 59;
+                break;
+            case STRONGEST:
+                strategy = "Strong";
+                x = 51;
+                break;
+        }
+        FC_Draw(gameData.fonts[WHITE12], gameData.renderer, x * gameData.mapScale, 16 * gameData.mapScale,
+                strategy.c_str());
+
+    }
     SDL_RenderPresent(gameData.renderer);
 
 }

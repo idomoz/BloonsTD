@@ -9,12 +9,13 @@
 #include "../Component.h"
 
 class AttackSpeed : public Component {
-    float interval;
-    float timeToRecharge = 0;
 public:
+    float timeToRecharge = 0;
+    float interval;
     static constexpr ComponentType type = ComponentType::ATTACK_SPEED;
 
     explicit AttackSpeed(float amountPerSecond) : interval(60 / amountPerSecond) {}
+
     void recharge();
     int getAmountReady();
 };

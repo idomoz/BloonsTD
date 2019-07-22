@@ -14,13 +14,14 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
         float minDistance = MAP_HEIGHT + MAP_WIDTH;
         float minProgress = gameData.path.size();
         float maxProgress = -1;
-        Entity *closestBloon = nullptr, *firstBloon = nullptr, *lastBloon = nullptr;
+        float maxLives = -1;
+        Entity *closestBloon = nullptr, *firstBloon = nullptr, *lastBloon = nullptr, *strongestBloon = nullptr;
         for (auto &gameEntity: layers[BLOONS_LAYER]) {
             if (gameEntity->getComponent<Camo>() and !camoP)
                 continue;
             float distance;
             if (gameEntity->getComponent<Type>()->value == BLOON_T) {
-                auto[bloonRange, bloonPosition, pathIndex] = gameEntity->getComponents<Range, Position, PathIndex>().value();
+                auto[bloonRange, bloonPosition, pathIndex, lives] = gameEntity->getComponents<Range, Position, PathIndex, Lives>().value();
                 distance =
                         twoPointsDistance(bloonPosition.value, towerPosition.value) - bloonRange.value;
                 if (distance > towerRange.value)
@@ -33,13 +34,18 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                     minProgress = pathIndex.progress;
                     lastBloon = gameEntity.get();
                 }
+                if (lives.value > maxLives or (lives.value == maxLives and pathIndex.progress > maxProgress)) {
+                    maxLives = lives.value;
+                    strongestBloon = gameEntity.get();
+                }
                 if (pathIndex.progress > maxProgress) {
                     maxProgress = pathIndex.progress;
                     firstBloon = gameEntity.get();
                 }
+
             }
         }
-        if (closestBloon or firstBloon or lastBloon) {
+        if (closestBloon or firstBloon or lastBloon or strongestBloon) {
             Entity *target;
             switch (strategy.value) {
                 case CLOSEST:
@@ -51,6 +57,9 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                 case LAST:
                     target = lastBloon;
                     break;
+                case STRONGEST:
+                    target = strongestBloon;
+                    break;
             }
 
             int amount = attackSpeed.getAmountReady();
@@ -59,30 +68,78 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                 switch (shotKind.value) {
                     case BOMB:
                     case GOO_SHOT:
+                    case LASER:
+                    case PLASMA:
+                    case SUN:
+                    case SPIKE:
+                    case JUGGERNAUT:
                     case DART: {
-                        EntityP shot(new Entity());
-                        shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
-                        shot->addComponent<Type>(SHOT_T);
-                        shot->addComponent<Kind>(shotKind.value);
-                        auto[velocityX, velocityY] = polarToCartesian(angle, getSpeed(shot));
-                        shot->addComponent<Velocity>(velocityX, velocityY);
-                        shot->addComponent<Range>(5);
-                        if (shotKind.value != DART) {
-                            shot->addComponent<Spread>(*entity->getComponent<Spread>());
-                            if (auto gooP = entity->getComponent<Goo>())
-                                shot->addComponent<Goo>(*gooP);
+                        int shotsAmount = 1;
+                        auto shotsAmountP = entity->getComponent<ShotsAmount>();
+                        float shotAngle = angle;
+                        float deltaAngle = 10;
+                        if (shotsAmountP) {
+                            shotsAmount = shotsAmountP->value;
+                            shotAngle -= degToRad((deltaAngle * (shotsAmount - 1)) / 2.0);
+                            deltaAngle = degToRad(deltaAngle);
                         }
-                        shot->addComponents(pierce, damage, distance);
-                        shot->addComponent<PoppedBloons>();
-                        SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
-                        shot->addComponent<Visibility>(gameData.renderer, surface,
-                                                       SDL_Rect{0, 0, surface->w / (shotKind.value == DART ? 2 : 4)},
-                                                       radToDeg(angle));
-                        layers[SHOTS_LAYER].emplace_back(shot);
+
+                        for (int j = 0; j < shotsAmount; ++j) {
+                            EntityP shot(new Entity());
+                            shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
+                            shot->addComponent<Type>(SHOT_T);
+                            shot->addComponent<Kind>(shotKind.value);
+                            auto[velocityX, velocityY] = polarToCartesian(shotAngle, getSpeed(shot));
+                            shot->addComponent<Velocity>(velocityX, velocityY);
+                            shot->addComponent<Range>(5);
+                            if (shotKind.value == BOMB or shotKind.value == GOO_SHOT) {
+                                shot->addComponent<Spread>(*entity->getComponent<Spread>());
+                                if (auto gooP = entity->getComponent<Goo>())
+                                    shot->addComponent<Goo>(*gooP);
+                            }
+                            shot->addComponents(pierce, damage, distance);
+                            if (camoP)
+                                shot->addComponent<Camo>();
+                            shot->addComponent<PoppedBloons>();
+                            SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
+                            int scale = 1;
+                            switch (shotKind.value) {
+                                case DART:
+                                    scale = 2;
+                                    break;
+                                case BOMB:
+                                    scale = 4;
+                                    break;
+                                case SPIKE:
+                                case JUGGERNAUT:
+                                    scale = 4;
+                                    break;
+                                case LASER:
+                                    scale = 10;
+                                    break;
+                                case PLASMA:
+                                case SUN:
+                                    scale = 6;
+                                    break;
+                            }
+                            shot->addComponent<Visibility>(gameData.renderer, surface,
+                                                           SDL_Rect{0, 0, surface->w / scale},
+                                                           radToDeg(shotAngle));
+                            layers[SHOTS_LAYER].emplace_back(shot);
+                            shotAngle += deltaAngle;
+                        }
                         break;
                     }
-                    case GUN: {
-                        target->addComponent<DamageEvent>(damage.value, EntityP(nullptr));
+
+                    case BULLET:
+                    case ENHANCED_BULLET: {
+                        if (shotKind.value == BULLET and target->getComponent<Kind>()->value == LEAD_BLOON)
+                            break;
+                        EntityP shot(new Entity());
+                        shot->addComponent<PoppedBloons>();
+                        shot->addComponent<Kind>(shotKind.value);
+                        target->addComponent<DamageEvent>(
+                                target->getComponent<Camo>() ? damage.value * 2 : damage.value, shot);
                         break;
                     }
                     case RADIAL_DART: {
@@ -98,7 +155,8 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                             shot->addComponent<Range>(5);
                             shot->addComponents(pierce, damage, distance);
                             shot->addComponent<PoppedBloons>();
-
+                            if (camoP)
+                                shot->addComponent<Camo>();
                             shot->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 2},
                                                            radToDeg(angle));
                             layers[SHOTS_LAYER].emplace_back(shot);

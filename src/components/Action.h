@@ -10,9 +10,17 @@
 enum ActionType {
     DRAG, CLICK, DROP, SELECT
 };
-enum Buttons {
-    PLAY_FAST_FORWARD
+
+enum VisibleObjects {
+    PLAY_FAST_FORWARD,
+    NEXT_STRATEGY,
+    PREVIOUS_STRATEGY,
+    UPGRADE_PATH_1,
+    UPGRADE_PATH_2,
+    UPGRADE_PATH_3,
+    MAP, UPGRADES_BACKGROUND, OTHER
 };
+
 class Action : public Component {
 
 public:
@@ -21,8 +29,7 @@ public:
 
     static constexpr ComponentType type = ComponentType::ACTION;
 
-    explicit Action(ActionType actionType, bool disabled = false) :actionType(actionType),
-                                                                           disabled(disabled) {}
+    Action(ActionType actionType, bool disabled = false) : actionType(actionType), disabled(disabled) {}
 
 };
 

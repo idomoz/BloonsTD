@@ -11,7 +11,7 @@ struct Sequence_S {
     int delay;
     int kind;
     int amount;
-    int bps;
+    float bps;
     char regrow;
     char camo;
     char fortified;

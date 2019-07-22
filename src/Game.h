@@ -25,7 +25,7 @@
 #include "systems/RemoveEntitiesSystem.h"
 #include "systems/CollisionSystem.h"
 #include "systems/DamageSystem.h"
-#include "systems/CashSystem.h"
+#include "systems/MenuSystem.h"
 #include "systems/LoadLevelSystem.h"
 #include "GameData.h"
 #include "boost/filesystem.hpp"
@@ -38,7 +38,7 @@ struct TempPoint {
 
 class Game {
     std::vector<std::unique_ptr<System>> systems;
-    Entities layers[N_LAYERS];
+    std::array<Entities, N_LAYERS> layers;
     RenderSystem *renderSystem;
 public:
     GameData gameData;

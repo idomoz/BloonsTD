@@ -77,10 +77,10 @@ std::string getSurfaceName(EntityP &entity) {
             }
             if (gooP)
                 switch (gooP->kind) {
-                    case GUM:
+                    case GLUE:
                         surfaceName += "Gum";
                         break;
-                    case GLUE:
+                    case GUM:
                         surfaceName += "Glue";
                         break;
                     case CORROSIVE:
@@ -114,6 +114,21 @@ std::string getSurfaceName(EntityP &entity) {
         }
         case SHOT_T: {
             switch (entity->getComponent<Kind>()->value) {
+                case SPIKE:
+                    surfaceName = "Spike";
+                    break;
+                case JUGGERNAUT:
+                    surfaceName = "Juggernaut";
+                    break;
+                case LASER:
+                    surfaceName = "Laser";
+                    break;
+                case PLASMA:
+                    surfaceName = "Plasma";
+                    break;
+                case SUN:
+                    surfaceName = "Sun";
+                    break;
                 case DART:
                 case RADIAL_DART:
                     surfaceName = "Dart";
@@ -126,10 +141,10 @@ std::string getSurfaceName(EntityP &entity) {
                     break;
                 case GOO_SPLASH:
                     switch (entity->getComponent<Goo>()->kind) {
-                        case GUM:
+                        case GLUE:
                             surfaceName = "SplashGum";
                             break;
-                        case GLUE:
+                        case GUM:
                             surfaceName = "SplashGlue";
                             break;
                         case CORROSIVE:
@@ -139,14 +154,14 @@ std::string getSurfaceName(EntityP &entity) {
                     break;
                 case GOO_SHOT:
                     switch (entity->getComponent<Goo>()->kind) {
-                        case GUM:
-                            surfaceName = "SplashGum";
-                            break;
                         case GLUE:
-                            surfaceName = "SplashGlue";
+                            surfaceName = "GumShot";
+                            break;
+                        case GUM:
+                            surfaceName = "GlueShot";
                             break;
                         case CORROSIVE:
-                            surfaceName = "SplashSlime";
+                            surfaceName = "SlimeShot";
                             break;
                     }
                     break;
@@ -219,7 +234,7 @@ float getSpeed(EntityP &entity) {
                 switch (gooP->kind) {
                     case CORROSIVE:
                     case GUM:
-                        speed *= 0.5;
+                        speed *= gooP->stickness;
                         break;
                     case GLUE:
                         speed = 0;
@@ -230,7 +245,14 @@ float getSpeed(EntityP &entity) {
             switch (entity->getComponent<Kind>()->value) {
                 case DART:
                 case RADIAL_DART:
+                case SPIKE:
+                case JUGGERNAUT:
                     speed = 12;
+                    break;
+                case LASER:
+                case PLASMA:
+                case SUN:
+                    speed = 22;
                     break;
                 case BOMB:
                 case GOO_SHOT:

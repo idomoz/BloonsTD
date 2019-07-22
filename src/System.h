@@ -27,6 +27,7 @@
 #include "components/MoveEntityEvent.h"
 #include "components/Regrow.h"
 #include "components/Goo.h"
+#include "components/Upgrades.h"
 
 typedef std::vector<EntityP> Entities;
 

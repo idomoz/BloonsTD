@@ -31,5 +31,8 @@ inline float twoPointsAngle(Point point1, Point point2) {
 inline float radToDeg(float radians) {
     return radians * (180.0 / 3.141592653589793238463);
 }
+inline float degToRad(float deg) {
+    return deg / (180.0 / 3.141592653589793238463);
+}
 
 #endif //SDL_GAME_PHYSICS_H

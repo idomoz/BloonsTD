@@ -11,7 +11,7 @@ void LoadLevelSystem::update(Entities *layers, GameData &gameData) {
     std::string fileName = "../assets/Levels/level" + std::to_string(gameData.level) + ".data";
     std::ifstream levelFile(fileName, std::ios::binary);
     Sequence_S sequenceS;
-    while (!levelFile.eof()) {
+    while (levelFile.peek() != EOF) {
         levelFile.read((char *) &sequenceS, 19);
         auto s = new Entity();
         s->addComponent<Type>(SEQUENCE_T);
