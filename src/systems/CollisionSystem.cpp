@@ -123,9 +123,13 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                         bloon->addComponent<DamageEvent>(damage.value, shot);
                     break;
                 case SUN:
+                case HOT_TACK:
+                case ENHANCED_TACK:
                     bloon->addComponent<DamageEvent>(damage.value, shot);
                     break;
                 case DART:
+                case TACK:
+                case BLADE:
                 case SPIKE:
                     if (bloonKind != LEAD_BLOON)
                         bloon->addComponent<DamageEvent>(damage.value, shot);

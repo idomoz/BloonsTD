@@ -43,6 +43,7 @@ Game::Game(bool fullscreen, float mapScale) {
             {},
             {},
             {},
+            {},
             {
              {OTHER, "upgrade_bar", {0,             0}, 1},
                     {OTHER, "menu", {MAP_WIDTH + SIDEBAR_WIDTH, 0}, 1},
@@ -115,12 +116,12 @@ Game::Game(bool fullscreen, float mapScale) {
                                              int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
     tower->addComponent<Range>(150);
-    tower->addComponent<AttackSpeed>(15);
+    tower->addComponent<AttackSpeed>(17.2);
     tower->addComponent<Pierce>(1);
     tower->addComponent<Damage>(1);
     tower->addComponent<Distance>(170);
     tower->addComponent<Type>(TOWER_T);
-    tower->addComponent<Cost>(3000);
+    tower->addComponent<Cost>(2975);
     auto &superMonkeyUpgrades = tower->addComponent<Upgrades>();
     std::string image = "SuperMonkey_LaserBlasts";
     superMonkeyUpgrades.paths[0].emplace_back(
@@ -173,11 +174,11 @@ Game::Game(bool fullscreen, float mapScale) {
                                              int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
     tower->addComponent<Range>(500);
-    tower->addComponent<AttackSpeed>(1);
+    tower->addComponent<AttackSpeed>(0.45);
     tower->addComponent<Pierce>(1);
     tower->addComponent<Damage>(1);
     tower->addComponent<Distance>(500);
-    tower->addComponent<Cost>(200);
+    tower->addComponent<Cost>(300);
     tower->addComponent<Type>(TOWER_T);
     auto &sniperMonkeyUpgrades = tower->addComponent<Upgrades>();
     image = "SniperMonkey_FullMetalJacket";
@@ -228,7 +229,7 @@ Game::Game(bool fullscreen, float mapScale) {
     tower->addComponent<Pierce>(1);
     tower->addComponent<Damage>(1);
     tower->addComponent<Distance>(150);
-    tower->addComponent<Cost>(80);
+    tower->addComponent<Cost>(170);
     tower->addComponent<Type>(TOWER_T);
     auto &upgrades = tower->addComponent<Upgrades>();
     image = "DartMonkey_SharpShots";
@@ -292,12 +293,12 @@ Game::Game(bool fullscreen, float mapScale) {
                                     SDL_Rect{int(position.X - surface->w / 3), int(position.Y - surface->h / 3),
                                              int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
-    tower->addComponent<Range>(70);
+    tower->addComponent<Range>(100);
     tower->addComponent<AttackSpeed>(2);
     tower->addComponent<Pierce>(1);
-    tower->addComponent<Damage>(2);
-    tower->addComponent<Distance>(500);
-    tower->addComponent<Cost>(300);
+    tower->addComponent<Damage>(1);
+    tower->addComponent<Distance>(120);
+    tower->addComponent<Cost>(555);
     tower->addComponent<Spread>(30);
     tower->addComponent<Type>(TOWER_T);
     layers[MENU_LAYER].emplace_back(tower);
@@ -312,12 +313,12 @@ Game::Game(bool fullscreen, float mapScale) {
                                     SDL_Rect{int(position.X - surface->w / 3), int(position.Y - surface->h / 3),
                                              int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
-    tower->addComponent<Range>(100);
-    tower->addComponent<AttackSpeed>(0.8);
+    tower->addComponent<Range>(150);
+    tower->addComponent<AttackSpeed>(0.97);
     tower->addComponent<Pierce>(1);
     tower->addComponent<Damage>(0);
-    tower->addComponent<Distance>(150);
-    tower->addComponent<Cost>(250);
+    tower->addComponent<Distance>(170);
+    tower->addComponent<Cost>(230);
     tower->addComponent<Spread>(70);
     tower->addComponent<Type>(TOWER_T);
     tower->addComponent<Goo>(GUM, 120);
@@ -365,19 +366,71 @@ Game::Game(bool fullscreen, float mapScale) {
     tower = new Entity();
     position = {SIDEBAR_WIDTH + MAP_WIDTH + 190, 141};
     tower->addComponent<Kind>(TACK_SHOOTER);
-    tower->addComponent<ShotKind>(RADIAL_DART);
+    tower->addComponent<ShotKind>(TACK);
     surface = gameData.assets["TackShooter"];
     tower->addComponent<Visibility>(gameData.renderer, surface,
                                     SDL_Rect{int(position.X - surface->w / 3), int(position.Y - surface->h / 3),
                                              int(surface->w / 1.5), 0});
     tower->addComponent<Action>(DRAG);
-    tower->addComponent<Range>(65);
-    tower->addComponent<AttackSpeed>(2);
+    tower->addComponent<Range>(90);
+    tower->addComponent<AttackSpeed>(0.6);
+    tower->addComponent<ShotsAmount>(8);
     tower->addComponent<Pierce>(1);
-    tower->addComponent<Damage>(2);
-    tower->addComponent<Distance>(80);
-    tower->addComponent<Cost>(150);
+    tower->addComponent<Damage>(1);
+    tower->addComponent<Distance>(100);
+    tower->addComponent<Cost>(305);
     tower->addComponent<Type>(TOWER_T);
+    auto &tackShooterUpgrades = tower->addComponent<Upgrades>();
+    image = "TackShooter_FasterShooting";
+    tackShooterUpgrades.paths[0].emplace_back(
+            Upgrade("Faster Shooting", 125, image, gameData.assets[image], {{ATTACK_SPEED_UPGRADE,    1.33}}));
+    image = "TackShooter_EvenFasterShooting";
+    tackShooterUpgrades.paths[0].emplace_back(
+            Upgrade("Even Faster Shooting", 225, image, gameData.assets[image], {{ATTACK_SPEED_UPGRADE,    2}}));
+    image = "TackShooter_HotShots";
+    tackShooterUpgrades.paths[0].emplace_back(
+            Upgrade("Hot Shots", 510, image, gameData.assets[image], {{SHOT_KIND_UPGRADE, HOT_TACK},{DAMAGE_UPGRADE, 1}}));
+
+    image = "TackShooter_LongRangeTacks";
+    tackShooterUpgrades.paths[1].emplace_back(
+            Upgrade("Long Range Tacks", 85, image, gameData.assets[image], {{RANGE_UPGRADE,    1.15},
+                                                                            {DISTANCE_UPGRADE,    1.15}}));
+    image = "TackShooter_SuperRangeTacks";
+    tackShooterUpgrades.paths[1].emplace_back(
+            Upgrade("Super Range Tacks", 190, image, gameData.assets[image], {{RANGE_UPGRADE,    1.25},
+                                                                              {DISTANCE_UPGRADE,    1.25}}));
+    image = "TackShooter_BladeShooter";
+    tackShooterUpgrades.paths[1].emplace_back(
+            Upgrade("Blade Shooter", 465, image, gameData.assets[image], {{ATTACK_SPEED_UPGRADE, 1.18},
+                                                                          {PIERCE_UPGRADE, 2},
+                                                                          {DAMAGE_UPGRADE, 2},
+                                                                          {SHOT_KIND_UPGRADE, BLADE}}));
+    image = "TackShooter_MoreTacks";
+    tackShooterUpgrades.paths[2].emplace_back(
+            Upgrade("More Tacks", 85, image, gameData.assets[image], {{SHOTS_AMOUNT_UPGRADE,   10}}));
+    image = "TackShooter_EvenMoreTacks";
+    tackShooterUpgrades.paths[2].emplace_back(
+            Upgrade("Even More Tacks", 85, image, gameData.assets[image], {{SHOTS_AMOUNT_UPGRADE,   12}}));
+    image = "TackShooter_TackSprayer";
+    tackShooterUpgrades.paths[2].emplace_back(
+            Upgrade("Tack Sprayer", 350, image, gameData.assets[image], {{ATTACK_SPEED_UPGRADE,    1.33},
+                                                                         {SHOTS_AMOUNT_UPGRADE,   16}}));
+    image = "TackShooter_Overdrive";
+    tackShooterUpgrades.paths[2].emplace_back(
+            Upgrade("Overdrive", 2125, image, gameData.assets[image], {{ATTACK_SPEED_UPGRADE,    3}}));
+    image = "TackShooter_TheTackZone";
+    tackShooterUpgrades.paths[2].emplace_back(
+            Upgrade("The Tack Zone", 17000, image, gameData.assets[image], {{ATTACK_SPEED_UPGRADE,    2},
+                                                                       {SHOT_KIND_UPGRADE, ENHANCED_TACK},
+                                                                       {RANGE_UPGRADE, 2},
+                                                                       {SHOTS_AMOUNT_UPGRADE, 32},
+                                                                       {DISTANCE_UPGRADE, 2},
+                                                                       {PIERCE_UPGRADE, 8}}));
+
+
+    tackShooterUpgrades.selectedPathUpgrades[0] = 2;
+    tackShooterUpgrades.selectedPathUpgrades[1] = 2;
+    tackShooterUpgrades.selectedPathUpgrades[2] = 2;
     layers[MENU_LAYER].emplace_back(tower);
 
 
@@ -389,6 +442,7 @@ Game::Game(bool fullscreen, float mapScale) {
     systems.emplace_back(new DraggingSystem);
     systems.emplace_back(new CollisionSystem);
     systems.emplace_back(new DamageSystem);
+    systems.emplace_back(new PopEffectSystem);
     systems.emplace_back(new MenuSystem);
     systems.emplace_back(new MovementSystem);
     systems.emplace_back(new RemoveEntitiesSystem);

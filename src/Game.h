@@ -27,6 +27,7 @@
 #include "systems/DamageSystem.h"
 #include "systems/MenuSystem.h"
 #include "systems/LoadLevelSystem.h"
+#include "systems/PopEffectSystem.h"
 #include "GameData.h"
 #include "boost/filesystem.hpp"
 #include <iostream>

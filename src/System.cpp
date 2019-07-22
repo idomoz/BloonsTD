@@ -130,7 +130,6 @@ std::string getSurfaceName(EntityP &entity) {
                     surfaceName = "Sun";
                     break;
                 case DART:
-                case RADIAL_DART:
                     surfaceName = "Dart";
                     break;
                 case BOMB:
@@ -138,6 +137,16 @@ std::string getSurfaceName(EntityP &entity) {
                     break;
                 case EXPLOSION:
                     surfaceName = "Explosion";
+                    break;
+                case TACK:
+                case ENHANCED_TACK:
+                    surfaceName = "Tack";
+                    break;
+                case HOT_TACK:
+                    surfaceName="HotTack";
+                    break;
+                case BLADE:
+                    surfaceName="Blade";
                     break;
                 case GOO_SPLASH:
                     switch (entity->getComponent<Goo>()->kind) {
@@ -243,8 +252,6 @@ float getSpeed(EntityP &entity) {
         }
         case SHOT_T: {
             switch (entity->getComponent<Kind>()->value) {
-                case DART:
-                case RADIAL_DART:
                 case SPIKE:
                 case JUGGERNAUT:
                     speed = 12;
@@ -252,11 +259,16 @@ float getSpeed(EntityP &entity) {
                 case LASER:
                 case PLASMA:
                 case SUN:
+                case TACK:
+                case BLADE:
+                case ENHANCED_TACK:
+                case HOT_TACK:
+                case DART:
                     speed = 22;
                     break;
                 case BOMB:
                 case GOO_SHOT:
-                    speed = 10;
+                    speed = 15;
                     break;
             }
             break;

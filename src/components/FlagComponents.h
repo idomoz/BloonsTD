@@ -13,5 +13,6 @@ class FlagComponent : public Component {};
 FLAG_COMPONENT(RemoveEntityEvent,REMOVE_ENTITY_EVENT);
 FLAG_COMPONENT(Camo,CAMO);
 FLAG_COMPONENT(Fortified,FORTIFIED);
+FLAG_COMPONENT(Seen,SEEN);
 
 #endif //SDL_GAME_FLAGCOMPONENTS_H

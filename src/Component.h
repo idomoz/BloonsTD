@@ -46,6 +46,7 @@ enum ComponentType {
     POPPED_BLOONS,
     UPGRADES,
     UPGRADE_P,
+    SEEN,
 
     MOVE_ENTITY_EVENT,
     REMOVE_ENTITY_EVENT,

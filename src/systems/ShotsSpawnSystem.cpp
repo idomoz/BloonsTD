@@ -142,22 +142,38 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                                 target->getComponent<Camo>() ? damage.value * 2 : damage.value, shot);
                         break;
                     }
-                    case RADIAL_DART: {
-                        SDL_Surface *surface = gameData.assets["Dart"];
-                        for (int j = 0; j < 8; ++j) {
+                    case TACK:
+                    case HOT_TACK:
+                    case BLADE:
+                    case ENHANCED_TACK: {
+                        int shotsAmount = entity->getComponent<ShotsAmount>()->value;
+                        for (int j = 0; j < shotsAmount; ++j) {
                             EntityP shot(new Entity());
-                            shot->addComponent<Position>(towerPosition.value.X, towerPosition.value.Y);
                             shot->addComponent<Type>(SHOT_T);
                             shot->addComponent<Kind>(shotKind.value);
-                            angle = (M_PI / 4) * j;
+                            angle = (2 * M_PI / shotsAmount) * j;
                             auto[velocityX, velocityY] = polarToCartesian(angle, getSpeed(shot));
                             shot->addComponent<Velocity>(velocityX, velocityY);
+                            auto[deltaX, deltaY] = polarToCartesian(angle, 10);
+                            shot->addComponent<Position>(towerPosition.value.X + deltaX,
+                                                         towerPosition.value.Y + deltaY);
                             shot->addComponent<Range>(5);
                             shot->addComponents(pierce, damage, distance);
                             shot->addComponent<PoppedBloons>();
-                            if (camoP)
-                                shot->addComponent<Camo>();
-                            shot->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 2},
+                            SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
+                            int scale = 1;
+                            switch (shotKind.value) {
+                                case TACK:
+                                case HOT_TACK:
+                                case ENHANCED_TACK:
+                                    scale = 5;
+                                    break;
+                                case BLADE:
+                                    scale = 4;
+                                    break;
+                            }
+                            shot->addComponent<Visibility>(gameData.renderer, surface,
+                                                           SDL_Rect{0, 0, surface->w / scale},
                                                            radToDeg(angle));
                             layers[SHOTS_LAYER].emplace_back(shot);
                         }
@@ -165,7 +181,8 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                     }
                 }
             }
-            if (shotKind.value != RADIAL_DART)
+            if (shotKind.value != TACK and shotKind.value != ENHANCED_TACK and shotKind.value != BLADE and
+                shotKind.value != HOT_TACK)
                 visibility.angle = radToDeg(angle) + 90;
         } else
             attackSpeed.recharge();

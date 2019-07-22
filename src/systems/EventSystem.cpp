@@ -78,6 +78,8 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                             draggable->addComponent<Goo>(*gooP);
                                         if (entity->getComponent<Camo>())
                                             draggable->addComponent<Camo>();
+                                        if (auto shotsAmountP = entity->getComponent<ShotsAmount>())
+                                            draggable->addComponent<ShotsAmount>(*shotsAmountP);
                                         EntityP ptr(draggable);
                                         gameData.selected = ptr;
                                         auto rangeShadow = new Entity();
@@ -142,6 +144,9 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                 for (auto[kind, value]:upgradeP.value->improvements) {
                                                     switch (kind) {
                                                         case RANGE_UPGRADE:
+                                                            gameData.selected->getComponent<Range>()->value *= value;
+                                                            break;
+                                                        case SPREAD_UPGRADE:
                                                             gameData.selected->getComponent<Range>()->value *= value;
                                                             break;
                                                         case PIERCE_UPGRADE:

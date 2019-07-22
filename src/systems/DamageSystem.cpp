@@ -35,7 +35,8 @@ EntityP
 spawnBloon(Entities &newBloons, GameData &gameData, int kind, EntityP &shot, int lives, float progress,
            int regrow, bool camo, bool fortified, Goo *gooP) {
     EntityP newBloon(new Entity());
-    shot->getComponent<PoppedBloons>()->value.emplace(newBloon.get());
+    if (shot)
+        shot->getComponent<PoppedBloons>()->value.emplace(newBloon.get());
     newBloon->addComponent<Type>(BLOON_T);
     newBloon->addComponent<Kind>(kind);
     newBloon->addComponent<Lives>(lives);
@@ -66,7 +67,9 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
         return;
     }
     auto &kind = bloon->getComponent<Kind>()->value;
-    auto &shotKind = shot->getComponent<Kind>()->value;
+    int shotKind = 0;
+    if (shot)
+        shotKind = shot->getComponent<Kind>()->value;
     float progress = bloon->getComponent<PathIndex>()->progress;
     SDL_Surface *surface;
     auto &visibility = *bloon->getComponent<Visibility>();
