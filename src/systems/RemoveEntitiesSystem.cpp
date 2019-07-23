@@ -24,6 +24,7 @@ void RemoveEntitiesSystem::update(Entities *layers, GameData &gameData) {
         gameData.levelReady = gameData.levelRunning = false;
         if (gameData.level <= gameData.finalLevel)
             gameData.level += 1;
-        gameData.playButton->getComponent<Visibility>()->loadTexture(gameData.renderer, gameData.assets["Play"]);
+        auto [texture,surface] = gameData.getTexture("Play");
+        gameData.playButton->getComponent<Visibility>()->reloadTexture(texture,surface);
     }
 }

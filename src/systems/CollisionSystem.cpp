@@ -112,7 +112,7 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
         if (bloon->getComponent<Camo>() and !shot->getComponent<Camo>())
             continue;
         int bloonKind = bloon->getComponent<Kind>()->value;
-        if (kind.value == EXPLOSION or pierce.value > 0) {
+        if (pierce.value > 0) {
             switch (kind.value) {
                 case LASER:
                     if (bloonKind != PURPLE_BLOON and bloonKind != LEAD_BLOON)
@@ -137,23 +137,68 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                 case JUGGERNAUT:
                     bloon->addComponent<DamageEvent>(bloonKind == CERAMIC_BLOON ? 5 : damage.value, shot);
                     break;
-                case EXPLOSION:
-                    if (bloonKind != BLACK_BLOON and bloonKind != ZEBRA_BLOON)
-                        bloon->addComponent<DamageEvent>(damage.value, shot);
+                case BOMB_EXPLOSION:
+                case MISSILE_EXPLOSION:
+                case ENHANCED_BOMB_EXPLOSION:
+                case MOAB_MAULER_EXPLOSION:
+                case MOAB_ASSASSIN_EXPLOSION:
+                case MOAB_ELIMINATOR_EXPLOSION: {
+                    bool breakFlag = false;
+                    shot->addComponent<RemoveEntityEvent>();
+                    switch (kind.value) {
+                        case BOMB_EXPLOSION:
+                        case MISSILE_EXPLOSION:
+                        case MOAB_MAULER_EXPLOSION:
+                            if (bloonKind == BLACK_BLOON or bloonKind == ZEBRA_BLOON)
+                                breakFlag = true;
+                            break;
+                    }
+                    if (breakFlag)
+                        break;
+                    auto shotGooP = shot->getComponent<Goo>();
+                    if (shotGooP and (bloonKind < MOAB or shot->getComponent<MoabClassAffecting>()))
+                        bloon->addComponent<Goo>(*shotGooP);
+                    int _damage = damage.value;
+                    if (bloonKind >= MOAB)
+                        switch (kind.value) {
+                            case MOAB_MAULER_EXPLOSION:
+                                _damage += 15;
+                                break;
+                            case MOAB_ASSASSIN_EXPLOSION:
+                                _damage += 20;
+                                break;
+                            case MOAB_ELIMINATOR_EXPLOSION:
+                                _damage += 80;
+                                break;
+                        }
+                    if (bloonKind == CERAMIC_BLOON)
+                        switch (kind.value) {
+                            case MOAB_ASSASSIN_EXPLOSION:
+                            case MOAB_ELIMINATOR_EXPLOSION:
+                                _damage = 24;
+                                break;
+                        }
+                    bloon->addComponent<DamageEvent>(_damage, shot);
                     break;
+                }
                 case GOO_SPLASH: {
                     bloon->addComponent<DamageEvent>(damage.value, shot);
                     if (bloonKind < MOAB and !bloon->getComponent<Goo>()) {
                         bloon->addComponent<Goo>(*shot->getComponent<Goo>());
-                        SDL_Surface *surface = gameData.assets[getSurfaceName(bloon)];
+                        auto [texture,surface] = gameData.getTexture(getSurfaceName(bloon));
                         auto &visibility = *bloon->getComponent<Visibility>();
                         visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
-                        visibility.loadTexture(gameData.renderer, surface);
+                        visibility.reloadTexture(texture, surface);
                     }
                     shot->addComponent<RemoveEntityEvent>();
                     break;
                 }
                 case BOMB:
+                case ENHANCED_BOMB:
+                case MISSILE:
+                case MOAB_MAULER:
+                case MOAB_ASSASSIN:
+                case MOAB_ELIMINATOR:
                 case GOO_SHOT:
                     if (shot->getComponent<RemoveEntityEvent>())
                         break;
@@ -162,7 +207,14 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                     explosion->addComponent<Type>(SHOT_T);
                     switch (kind.value) {
                         case BOMB:
-                            explosion->addComponent<Kind>(EXPLOSION);
+                        case ENHANCED_BOMB:
+                        case MISSILE:
+                        case MOAB_MAULER:
+                        case MOAB_ASSASSIN:
+                        case MOAB_ELIMINATOR:
+                            explosion->addComponent<Kind>(kind.value + 1);
+                            if (auto shotGooP = shot->getComponent<Goo>())
+                                explosion->addComponent<Goo>(*shotGooP);
                             break;
                         case GOO_SHOT:
                             explosion->addComponent<Kind>(GOO_SPLASH);
@@ -173,14 +225,14 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                     explosion->addComponent<PoppedBloons>();
                     explosion->addComponent<Range>(shot->getComponent<Spread>()->value);
                     explosion->addComponents(damage);
-                    SDL_Surface *surface = gameData.assets[getSurfaceName(explosion)];
-                    explosion->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 2});
+                    auto [texture,surface] = gameData.getTexture(getSurfaceName(explosion));
+                    explosion->addComponent<Visibility>(texture, surface, SDL_Rect{0, 0, surface->w / 2});
                     layers[SHOTS_LAYER].emplace_back(explosion);
                     shot->addComponent<RemoveEntityEvent>();
                     break;
             }
 
-            if (kind.value == EXPLOSION or --pierce.value == 0)
+            if (--pierce.value == 0)
                 shot->addComponent<RemoveEntityEvent>();
         }
     }

@@ -63,8 +63,8 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         auto[type, kind, shotKind, range, attackInterval, pierce, damage, distance, cost, upgrades] =
                                         entity->getComponents<Type, Kind, ShotKind, Range, AttackSpeed, Pierce, Damage, Distance, Cost, Upgrades>().value();
                                         auto draggable = new Entity();
-                                        SDL_Surface *surface = gameData.assets[getSurfaceName(entity)];
-                                        draggable->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{
+                                        auto[texture, surface] = gameData.getTexture(getSurfaceName(entity));
+                                        draggable->addComponent<Visibility>(texture, surface, SDL_Rect{
                                                 originalMouseX - int(surface->w / 3.0), mouseY - int(surface->h / 3.0),
                                                 int(surface->w / 1.5), int(surface->h / 1.5)});
                                         draggable->addComponent<Draggable>();
@@ -99,10 +99,10 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                     gameData.FPS = 240 - gameData.FPS;
                                                 else
                                                     gameData.levelRunning = true;
-                                                visibility.loadTexture(gameData.renderer,
-                                                                       gameData.assets[std::string("FastForward") +
-                                                                                       (gameData.FPS == 180 ? "Enabled"
-                                                                                                            : "")]);
+                                                auto[texture, surface] = gameData.getTexture(
+                                                        std::string("FastForward") +
+                                                        (gameData.FPS == 180 ? "Enabled" : ""));
+                                                visibility.reloadTexture(texture,surface);
                                                 break;
                                             }
                                             case NEXT_STRATEGY: {
@@ -147,7 +147,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                             gameData.selected->getComponent<Range>()->value *= value;
                                                             break;
                                                         case SPREAD_UPGRADE:
-                                                            gameData.selected->getComponent<Range>()->value *= value;
+                                                            gameData.selected->getComponent<Spread>()->value *= value;
                                                             break;
                                                         case PIERCE_UPGRADE:
                                                             gameData.selected->getComponent<Pierce>()->value += value;
@@ -167,6 +167,10 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                         case CAMO_UPGRADE:
                                                             gameData.selected->addComponent<Camo>();
                                                             break;
+                                                        case ADD_GOO_UPGRADE: {
+                                                            gameData.selected->addComponent<Goo>(value, 60, 60, true);
+                                                            break;
+                                                        }
                                                         case GOO_KIND_UPGRADE: {
                                                             auto &goo = *gameData.selected->getComponent<Goo>();
                                                             goo.kind = value;
@@ -194,7 +198,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                             goo.soak = true;
                                                             break;
                                                         }
-                                                        case GOO_STICKNESS_UPGRADE: {
+                                                        case GOO_STICKINESS_UPGRADE: {
                                                             auto &goo = *gameData.selected->getComponent<Goo>();
                                                             goo.stickness = value;
                                                             break;
@@ -204,6 +208,9 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                             break;
                                                         case SHOT_KIND_UPGRADE:
                                                             gameData.selected->getComponent<ShotKind>()->value = value;
+                                                            break;
+                                                        case MOAB_CLASS_AFFECTING_UPGRADE:
+                                                            gameData.selected->addComponent<MoabClassAffecting>();
                                                             break;
                                                     }
                                                 }

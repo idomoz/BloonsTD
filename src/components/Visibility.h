@@ -12,8 +12,6 @@
 #include "../Component.h"
 
 
-SDL_Texture *loadTexture(SDL_Renderer *renderer, const char *path);
-
 class Visibility : public Component {
     SDL_Surface *surface = nullptr;
     SDL_Texture *texture = nullptr;
@@ -23,23 +21,19 @@ public:
     bool hidden = false;
     static constexpr ComponentType type = ComponentType::VISIBILITY;
 
-    Visibility(SDL_Renderer *renderer, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR = std::nullopt,
-               float angle = 0,bool hidden = false);
-
-
-    ~Visibility() override;
+    Visibility(SDL_Texture *newTexture, SDL_Surface *newSurface, std::optional<SDL_Rect> dstR = std::nullopt,
+               float angle = 0, bool hidden = false) : dstRect(dstR), angle(angle), hidden(hidden), texture(newTexture),
+                                                       surface(newSurface) { reloadTexture(); }
 
     SDL_Texture *getTexture() { return texture; }
 
     SDL_Rect *getDstRect() { return dstRect ? &dstRect.value() : nullptr; }
 
-    void setDstRect(SDL_Rect newDstRect) {dstRect.value()= newDstRect;}
+    void setDstRect(SDL_Rect newDstRect) { dstRect.value() = newDstRect; }
 
     void setPosition(int x, int y);
 
-    void loadTexture(SDL_Renderer *renderer, SDL_Surface *newSurface);
-
-    void reloadTexture(SDL_Renderer *renderer);
+    void reloadTexture(SDL_Texture *newTexture = nullptr, SDL_Surface *newSurface = nullptr);
 
 
 };

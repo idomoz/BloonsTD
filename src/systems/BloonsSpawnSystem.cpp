@@ -31,8 +31,8 @@ void BloonsSpawnSystem::update(Entities *layers, GameData &gameData) {
             if (fortifiedP)
                 bloon->addComponent<Fortified>();
             bloon->addComponent<Lives>(getBloonProperty<TOTAL_LIVES>(bloon));
-            SDL_Surface *surface = gameData.assets[getSurfaceName(bloon)];
-            bloon->addComponent<Visibility>(gameData.renderer, surface,
+            auto [texture,surface] = gameData.getTexture(getSurfaceName(bloon));
+            bloon->addComponent<Visibility>(texture, surface,
                                             SDL_Rect{0, 0, int(surface->w / 3), int(surface->h / 3)});
             bloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
             layers[BLOONS_LAYER].emplace_back(bloon);

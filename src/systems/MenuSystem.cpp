@@ -32,12 +32,12 @@ void MenuSystem::update(Entities *layers, GameData &gameData) {
                         if (!upgradeP_P or upgradeP_P->value != &currentUpgrade or
                             upgradeP_P->name != currentUpgrade.name or (!actionP->disabled and currentUpgrade.locked)) {
                             entity->addComponent<UpgradeP>(&currentUpgrade);
-                            if (currentUpgrade.locked)
-                                currentUpgrade.surface = gameData.assets[currentUpgrade.surfaceName + "Locked"];
                             SDL_Surface *surface = currentUpgrade.surface;
                             visibility.setDstRect(
                                     {75 - surface->w / 34, 143 + 135 * path - surface->h / 17, surface->w / 17, 0});
-                            visibility.loadTexture(gameData.renderer, surface);
+                            visibility.reloadTexture(
+                                    currentUpgrade.locked ? currentUpgrade.lockedTexture : currentUpgrade.texture,
+                                    surface);
                         }
                         actionP->disabled = currentUpgrade.locked;
                         visibility.hidden = false;
@@ -54,8 +54,9 @@ void MenuSystem::update(Entities *layers, GameData &gameData) {
                     bool disabled = gameData.cash < cost.value;
                     if (disabled != action.disabled) {
                         action.disabled = disabled;
-                        visibility.loadTexture(gameData.renderer,
-                                               gameData.assets[getSurfaceName(entity) + (disabled ? "Disabled" : "")]);
+                        auto[texture, surface] = gameData.getTexture(
+                                getSurfaceName(entity) + (disabled ? "Disabled" : ""));
+                        visibility.reloadTexture(texture, surface);
                     }
 
             }

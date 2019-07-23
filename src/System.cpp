@@ -133,9 +133,27 @@ std::string getSurfaceName(EntityP &entity) {
                     surfaceName = "Dart";
                     break;
                 case BOMB:
+                case ENHANCED_BOMB:
                     surfaceName = "Bomb";
                     break;
-                case EXPLOSION:
+                case MISSILE:
+                    surfaceName = "Missile";
+                    break;
+                case MOAB_MAULER:
+                    surfaceName = "MoabMauler";
+                    break;
+                case MOAB_ASSASSIN:
+                    surfaceName = "MoabAssassin";
+                    break;
+                case MOAB_ELIMINATOR:
+                    surfaceName = "MoabEliminator";
+                    break;
+                case BOMB_EXPLOSION:
+                case MISSILE_EXPLOSION:
+                case ENHANCED_BOMB_EXPLOSION:
+                case MOAB_MAULER_EXPLOSION:
+                case MOAB_ASSASSIN_EXPLOSION:
+                case MOAB_ELIMINATOR_EXPLOSION:
                     surfaceName = "Explosion";
                     break;
                 case TACK:
@@ -143,10 +161,10 @@ std::string getSurfaceName(EntityP &entity) {
                     surfaceName = "Tack";
                     break;
                 case HOT_TACK:
-                    surfaceName="HotTack";
+                    surfaceName = "HotTack";
                     break;
                 case BLADE:
-                    surfaceName="Blade";
+                    surfaceName = "Blade";
                     break;
                 case GOO_SPLASH:
                     switch (entity->getComponent<Goo>()->kind) {
@@ -246,6 +264,7 @@ float getSpeed(EntityP &entity) {
                         speed *= gooP->stickness;
                         break;
                     case GLUE:
+                    case STUN:
                         speed = 0;
                 }
             break;
@@ -264,9 +283,14 @@ float getSpeed(EntityP &entity) {
                 case ENHANCED_TACK:
                 case HOT_TACK:
                 case DART:
+                case MISSILE:
+                case MOAB_MAULER:
+                case MOAB_ASSASSIN:
+                case MOAB_ELIMINATOR:
                     speed = 22;
                     break;
                 case BOMB:
+                case ENHANCED_BOMB:
                 case GOO_SHOT:
                     speed = 15;
                     break;

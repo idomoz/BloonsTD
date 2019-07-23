@@ -18,8 +18,8 @@ void PopEffectSystem::update(Entities *layers, GameData &gameData) {
                 continue;
             auto pop = new Entity();
             pop->addComponent<Position>(position);
-            SDL_Surface *surface = gameData.assets["Pop"];
-            pop->addComponent<Visibility>(gameData.renderer,surface,SDL_Rect{0,0,int(surface->w/1.5)},distr(generator));
+            auto [texture,surface] = gameData.getTexture("Pop");
+            pop->addComponent<Visibility>(texture,surface,SDL_Rect{0,0,int(surface->w/1.5)},distr(generator));
             layers[POP_LAYER].emplace_back(pop);
         }
         else

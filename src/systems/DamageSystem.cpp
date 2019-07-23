@@ -50,9 +50,9 @@ spawnBloon(Entities &newBloons, GameData &gameData, int kind, EntityP &shot, int
         newBloon->addComponent<Fortified>();
     if (gooP and gooP->soak)
         newBloon->addComponent<Goo>(*gooP);
-    SDL_Surface *surface = gameData.assets[getSurfaceName(newBloon)];
+    auto [texture,surface] = gameData.getTexture(getSurfaceName(newBloon));
     newBloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
-    newBloon->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 3, 0});
+    newBloon->addComponent<Visibility>(texture, surface, SDL_Rect{0, 0, surface->w / 3, 0});
     newBloons.emplace_back(newBloon);
     return newBloon;
 }
@@ -72,11 +72,12 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
         shotKind = shot->getComponent<Kind>()->value;
     float progress = bloon->getComponent<PathIndex>()->progress;
     SDL_Surface *surface;
+    SDL_Texture * texture;
     auto &visibility = *bloon->getComponent<Visibility>();
     if (kind > PINK_BLOON) {
         if (kind >= CERAMIC_BLOON and !didBloonPop(bloon, lives, damage, getBloonProperty<MIN_LIVES>(bloon))) {
-            surface = gameData.assets[getSurfaceName(bloon)];
-            visibility.loadTexture(gameData.renderer, surface);
+            std::tie(texture,surface) = gameData.getTexture(getSurfaceName(bloon));
+            visibility.reloadTexture(texture, surface);
             return;
         }
         if (kind < CERAMIC_BLOON and !didBloonPop(bloon, lives, damage))
@@ -102,9 +103,9 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                 bloon->removeComponent<Goo>();
             gameData.cash += kind - ((fortifiedP ? lives / 2 : lives) - 1);
             kind = (fortifiedP ? lives / 2 : lives) - 1;
-            surface = gameData.assets[getSurfaceName(bloon)];
+            std::tie(texture,surface) = gameData.getTexture(getSurfaceName(bloon));
             visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
-            visibility.loadTexture(gameData.renderer, surface);
+            visibility.reloadTexture(texture, surface);
             if (regrowP)
                 regrowP->regrowTime = 60;
             bloon->getComponent<Range>()->value = std::max(surface->w / 6, surface->h / 6);
@@ -118,9 +119,7 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                                               i == 0 ? std::fmaxf(0, progress - 10) : std::fminf(
                                                       gameData.path.size() - 1, progress + 10),
                                               regrowP ? regrowP->kind : 0, camoP, false, gooP);
-                damageBloon(newBloon, shot,
-                            shotKind == ENHANCED_BULLET ? damage : (i == 0 ? ceilf(damage / 2.0) : floorf(
-                                    damage / 2.0)), gameData, newBloons);
+                damageBloon(newBloon, shot,damage, gameData, newBloons);
             }
             break;
         }
@@ -130,9 +129,7 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                                               i == 0 ? std::fmaxf(0, progress - 12) : std::fminf(
                                                       gameData.path.size() - 1, progress + 12),
                                               regrowP ? regrowP->kind : 0, camoP, false, gooP);
-                damageBloon(newBloon, shot,
-                            shotKind == ENHANCED_BULLET ? damage : (i == 0 ? ceilf(damage / 2.0) : floorf(
-                                    damage / 2.0)), gameData, newBloons);
+                damageBloon(newBloon, shot,damage, gameData, newBloons);
             }
             break;
         }
@@ -144,9 +141,7 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                                               i == 0 ? std::fmaxf(0, progress - 14) : std::fminf(
                                                       gameData.path.size() - 1, progress + 14),
                                               regrowP ? regrowP->kind : 0, camoP, false, gooP);
-                damageBloon(newBloon, shot,
-                            shotKind == ENHANCED_BULLET ? damage : (i == 0 ? ceilf(damage / 2.0) : floorf(
-                                    damage / 2.0)), gameData, newBloons);
+                damageBloon(newBloon, shot, damage, gameData, newBloons);
             }
             break;
         }
@@ -160,11 +155,7 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                                               (i < 2 ? std::fmaxf(0, progress - 20 + 10 * (i % 2)) : std::fminf(
                                                       gameData.path.size() - 1, progress + 20 - 10 * (i % 2))),
                                               kind == DDT ? CERAMIC_BLOON : 0, kind == DDT, fortifiedP, nullptr);
-                damageBloon(newBloon, shot,
-                            shotKind == ENHANCED_BULLET ? damage : (i == 0 ? ceilf(damage / 4.0) : damage -
-                                                                                                   ceilf(damage / 4.0) *
-                                                                                                   3),
-                            gameData, newBloons);
+                damageBloon(newBloon, shot,damage, gameData, newBloons);
             }
             break;
         }
@@ -184,15 +175,11 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                 newBloon->getComponent<PathIndex>()->progress =
                         i < 2 ? std::fmaxf(0, progress - 20 + 10 * (i % 2)) : std::fminf(
                                 gameData.path.size() - 1, progress + 30 - 10 * (i % 3));
-                surface = gameData.assets[getSurfaceName(newBloon)];
+                std::tie(texture,surface) = gameData.getTexture(getSurfaceName(newBloon));
                 newBloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
-                newBloon->addComponent<Visibility>(gameData.renderer, surface, SDL_Rect{0, 0, surface->w / 3, 0});
+                newBloon->addComponent<Visibility>(texture, surface, SDL_Rect{0, 0, surface->w / 3, 0});
                 newBloons.emplace_back(newBloon);
-                damageBloon(newBloon, shot,
-                            shotKind == ENHANCED_BULLET ? damage : (i == 0 ? ceilf(damage / 5.0) : damage -
-                                                                                                   ceilf(damage / 5.0) *
-                                                                                                   4), gameData,
-                            newBloons);
+                damageBloon(newBloon, shot,damage, gameData, newBloons);
             }
             break;
         }

@@ -102,9 +102,10 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                                     break;
                             }
                             lives.value = getBloonProperty<TOTAL_LIVES>(entity);
-                            SDL_Surface *surface = gameData.assets[getSurfaceName(entity)];
+
+                            auto[texture,surface] = gameData.getTexture(getSurfaceName(entity));
                             visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
-                            visibility.loadTexture(gameData.renderer, surface);
+                            visibility.reloadTexture(texture, surface);
                             entity->getComponent<Range>()->value = std::max(surface->w / 6, surface->h / 6);
                             regrowP->regrowTime = 60;
                         }
@@ -119,10 +120,10 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                         gooP->ttl -= 1;
                         if (gooP->ttl == 0) {
                             entity->removeComponent<Goo>();
-                            SDL_Surface *surface = gameData.assets[getSurfaceName(entity)];
+                            auto[texture,surface] = gameData.getTexture(getSurfaceName(entity));
                             auto &visibility = *entity->getComponent<Visibility>();
                             visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
-                            visibility.loadTexture(gameData.renderer, surface);
+                            visibility.reloadTexture(texture, surface);
                         }
                     }
                     pathIndex.progress += speed;

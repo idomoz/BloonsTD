@@ -38,12 +38,14 @@ public:
     Point startingPoint;
     Point finishPoint;
     std::unordered_map<std::string, SDL_Surface *> assets;
+    std::unordered_map<std::string, SDL_Texture *> assetsCache;
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     EntityP selected;
     FC_Font* fonts[FONTS_LENGTH];
     EntityP playButton;
     ~GameData();
+    std::tuple<SDL_Texture *,SDL_Surface *> getTexture(const std::string &name);
 };
 
 #endif //SDL_GAME_GAMEDATA_H

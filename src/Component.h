@@ -47,6 +47,7 @@ enum ComponentType {
     UPGRADES,
     UPGRADE_P,
     SEEN,
+    MOAB_CLASS_AFFECTING,
 
     MOVE_ENTITY_EVENT,
     REMOVE_ENTITY_EVENT,

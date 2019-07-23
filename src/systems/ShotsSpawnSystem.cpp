@@ -67,6 +67,11 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
             for (int i = 0; i < amount; ++i) {
                 switch (shotKind.value) {
                     case BOMB:
+                    case ENHANCED_BOMB:
+                    case MISSILE:
+                    case MOAB_MAULER:
+                    case MOAB_ASSASSIN:
+                    case MOAB_ELIMINATOR:
                     case GOO_SHOT:
                     case LASER:
                     case PLASMA:
@@ -92,8 +97,8 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                             auto[velocityX, velocityY] = polarToCartesian(shotAngle, getSpeed(shot));
                             shot->addComponent<Velocity>(velocityX, velocityY);
                             shot->addComponent<Range>(5);
-                            if (shotKind.value == BOMB or shotKind.value == GOO_SHOT) {
-                                shot->addComponent<Spread>(*entity->getComponent<Spread>());
+                            if (auto spreadP = entity->getComponent<Spread>()) {
+                                shot->addComponent<Spread>(*spreadP);
                                 if (auto gooP = entity->getComponent<Goo>())
                                     shot->addComponent<Goo>(*gooP);
                             }
@@ -101,15 +106,20 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                             if (camoP)
                                 shot->addComponent<Camo>();
                             shot->addComponent<PoppedBloons>();
-                            SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
-                            int scale = 1;
+                            auto[texture,surface] = gameData.getTexture(getSurfaceName(shot));
+                            float scale = 1;
                             switch (shotKind.value) {
+                                case MISSILE:
+                                    scale = 1.5;
+                                    break;
                                 case DART:
+                                case MOAB_MAULER:
+                                case MOAB_ASSASSIN:
+                                case MOAB_ELIMINATOR:
                                     scale = 2;
                                     break;
                                 case BOMB:
-                                    scale = 4;
-                                    break;
+                                case ENHANCED_BOMB:
                                 case SPIKE:
                                 case JUGGERNAUT:
                                     scale = 4;
@@ -122,8 +132,8 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                                     scale = 6;
                                     break;
                             }
-                            shot->addComponent<Visibility>(gameData.renderer, surface,
-                                                           SDL_Rect{0, 0, surface->w / scale},
+                            shot->addComponent<Visibility>(texture, surface,
+                                                           SDL_Rect{0, 0, int(surface->w / scale)},
                                                            radToDeg(shotAngle));
                             layers[SHOTS_LAYER].emplace_back(shot);
                             shotAngle += deltaAngle;
@@ -160,7 +170,7 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                             shot->addComponent<Range>(5);
                             shot->addComponents(pierce, damage, distance);
                             shot->addComponent<PoppedBloons>();
-                            SDL_Surface *surface = gameData.assets[getSurfaceName(shot)];
+                            auto [texture,surface] = gameData.getTexture(getSurfaceName(shot));
                             int scale = 1;
                             switch (shotKind.value) {
                                 case TACK:
@@ -172,7 +182,7 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                                     scale = 4;
                                     break;
                             }
-                            shot->addComponent<Visibility>(gameData.renderer, surface,
+                            shot->addComponent<Visibility>(texture, surface,
                                                            SDL_Rect{0, 0, surface->w / scale},
                                                            radToDeg(angle));
                             layers[SHOTS_LAYER].emplace_back(shot);
