@@ -1,0 +1,5 @@
+Delay,Kind ,Amount,Frequency
+0   ,pink ,35     ,3
+1   ,black ,30     ,2
+1   ,white ,25     ,1.5
+10   ,rainbow ,5     ,0.5

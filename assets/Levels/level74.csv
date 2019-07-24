@@ -1,0 +1,5 @@
+Delay,Kind ,Amount,Frequency
+0,ceramic ,50,2
+0,ceramic f,60,2
+0,ceramic fcr,25,2
+0,bfb ,1,2

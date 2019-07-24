@@ -1,0 +1,5 @@
+Delay,Kind ,Amount,Frequency
+0,ceramic ,40,2
+0,ceramic r,40,2
+0,ceramic f,40,2
+0,moab ,30,2

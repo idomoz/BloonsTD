@@ -1,0 +1,5 @@
+Delay,Kind ,Amount,Frequency
+0,red ,20,5
+3,lead f,8,1
+5,ceramic ,20,1
+0,moab ,2,0.1

@@ -1,0 +1,5 @@
+Delay,Kind ,Amount,Frequency
+0,lead ,14,2
+0,lead f,14,2
+0,moab f,3,2
+0,bfb ,7,2

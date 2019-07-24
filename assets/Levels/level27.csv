@@ -1,0 +1,5 @@
+Delay,Kind ,Amount,Frequency
+0   ,red ,100     ,3
+3   ,blue ,60     ,3.5
+6   ,green ,45     ,2
+10   ,yellow ,45     ,1.6

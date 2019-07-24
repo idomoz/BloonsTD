@@ -1,0 +1,4 @@
+Delay,Kind ,Amount,Frequency
+0,lead c,50,1.3
+6,ceramic ,20,1
+10,ceramic r,10,0.9

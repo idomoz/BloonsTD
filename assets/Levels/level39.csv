@@ -1,0 +1,6 @@
+Delay,Kind     ,Amount,Frequency
+0    ,black    ,10    ,1
+5    ,white    ,10    ,0.5
+2    ,zebra    ,20    ,1
+4    ,rainbow  ,18    ,1
+6    ,rainbow r,2    ,1

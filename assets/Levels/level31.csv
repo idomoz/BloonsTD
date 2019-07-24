@@ -1,0 +1,5 @@
+Delay,Kind ,Amount,Frequency
+6   ,black ,8     ,1
+0.5   ,white,8     ,1
+2   ,zebra ,8     ,1
+0.5   ,zebra r ,2     ,0.3

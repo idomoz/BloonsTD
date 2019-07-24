@@ -1,0 +1,6 @@
+Delay,Kind    ,Amount,Frequency
+0    ,pink    ,42    ,2
+2    ,white   ,17    ,2
+5    ,zebra   ,10    ,2
+10    ,lead    ,14    ,1
+4    ,ceramic,2    ,0.3
