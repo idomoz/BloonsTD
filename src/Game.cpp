@@ -102,7 +102,10 @@ Game::Game(bool fullscreen, float mapScale) {
         upgradePath->addComponent<Kind>(UPGRADE_PATH_1 + j);
         layers[MENU_LAYER].emplace_back(upgradePath);
     }
-
+    auto sellTowerButton = new Entity();
+    sellTowerButton->addComponent<Action>(CLICK);
+    sellTowerButton->addComponent<Kind>(SELL_TOWER);
+    layers[MENU_LAYER].emplace_back(sellTowerButton);
 
     // Towers
     auto tower = new Entity();

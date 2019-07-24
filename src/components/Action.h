@@ -18,7 +18,9 @@ enum VisibleObjects {
     UPGRADE_PATH_1,
     UPGRADE_PATH_2,
     UPGRADE_PATH_3,
-    MAP, UPGRADES_BACKGROUND, OTHER
+    MAP, UPGRADES_BACKGROUND,
+    SELL_TOWER,
+    OTHER
 };
 
 class Action : public Component {

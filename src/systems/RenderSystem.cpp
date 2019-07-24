@@ -60,23 +60,38 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                 auto[visibilityP, kindP, actionP] = entity->getComponentsP<Visibility, Kind, Action>();
                 if (visibilityP and visibilityP->hidden)
                     continue;
-                if (kindP and actionP and actionP->actionType == CLICK)
-                    switch (kindP->value) {
-                        case UPGRADE_PATH_1:
-                        case UPGRADE_PATH_2:
-                        case UPGRADE_PATH_3: {
-                            auto &upgradeP = *entity->getComponent<UpgradeP>();
-                            int path = kindP->value - UPGRADE_PATH_1;
-                            int cost = upgradeP.value->cost;
-                            FC_Draw(gameData.fonts[WHITE12], gameData.renderer, 24 * gameData.mapScale,
-                                    (67 + path * 135) * gameData.mapScale, upgradeP.value->name.c_str());
+                if (kindP and actionP)
+                    switch (actionP->actionType) {
+                        case CLICK:
+                            switch (kindP->value) {
+                                case UPGRADE_PATH_1:
+                                case UPGRADE_PATH_2:
+                                case UPGRADE_PATH_3: {
+                                    auto &upgradeP = *entity->getComponent<UpgradeP>();
+                                    int path = kindP->value - UPGRADE_PATH_1;
+                                    int cost = upgradeP.value->cost;
+                                    FC_Draw(gameData.fonts[WHITE12], gameData.renderer, 25 * gameData.mapScale,
+                                            (68 + path * 135) * gameData.mapScale, upgradeP.value->name.c_str());
+                                    int font = WHITE8;
+                                    if (cost > gameData.cash)
+                                        font = RED8;
+                                    FC_Draw(gameData.fonts[font], gameData.renderer, 47 * gameData.mapScale,
+                                            (81 + path * 135) * gameData.mapScale, "$%s", formatCommas(cost).c_str());
+                                    break;
+                                }
+                            }
+                            break;
+                        case DRAG: {
+                            int cost = entity->getComponent<Cost>()->value;
                             int font = WHITE8;
                             if (cost > gameData.cash)
                                 font = RED8;
-                            FC_Draw(gameData.fonts[font], gameData.renderer, 47 * gameData.mapScale,
-                                    (80 + path * 135) * gameData.mapScale, "$%s", formatCommas(cost).c_str());
-                            break;
+                            FC_Draw(gameData.fonts[font], gameData.renderer,
+                                    (visibilityP->getDstRect()->x +(visibilityP->getDstRect()->w/2)- 50) * gameData.mapScale,
+                                    (visibilityP->getDstRect()->y+(visibilityP->getDstRect()->h/2) ) * gameData.mapScale, "$%s",
+                                    formatCommas(cost).c_str());
                         }
+                        break;
                     }
             }
             auto rangeShadowP = entity->getComponent<RangeShadow>();
@@ -153,6 +168,10 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
         }
         FC_Draw(gameData.fonts[WHITE12], gameData.renderer, x * gameData.mapScale, 16 * gameData.mapScale,
                 strategy.c_str());
+        FC_Draw(gameData.fonts[WHITE12], gameData.renderer, 25 * gameData.mapScale, 451 * gameData.mapScale,
+                "Sell for:");
+        FC_Draw(gameData.fonts[WHITE8], gameData.renderer, 25 * gameData.mapScale, 463 * gameData.mapScale,
+                "$%s", formatCommas(int(gameData.selected->getComponent<Cost>()->value * 0.75)).c_str());
 
     }
     SDL_RenderPresent(gameData.renderer);

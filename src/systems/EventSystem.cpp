@@ -15,8 +15,21 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                 gameData.isRunning = false;
                 break;
             }
+            case SDL_KEYUP:
+                switch (event.key.keysym.sym){
+                    case SDLK_SPACE:
+                        if (gameData.levelRunning)
+                            gameData.FPS = 240 - gameData.FPS;
+                        else
+                            gameData.levelRunning = true;
+                        auto[texture, surface] = gameData.getTexture(
+                                std::string("FastForward") +
+                                (gameData.FPS == 180 ? "Enabled" : ""));
+                        gameData.playButton->getComponent<Visibility>()->reloadTexture(texture, surface);
+                        break;
+                }
+                break;
             case SDL_MOUSEBUTTONDOWN: {
-
                 int mouseX, mouseY, originalMouseX;
                 SDL_GetMouseState(&mouseX, &mouseY);
                 mouseX = originalMouseX = int(mouseX / gameData.mapScale);
@@ -25,17 +38,26 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                 Entities newEntities[N_LAYERS];
                 for (int i = N_LAYERS - 1; i >= 0; --i) {
                     for (auto &entity: layers[i]) {
-                        if (auto components = entity->getComponents<Action, Visibility>()) {
-                            auto[action, visibility] = components.value();
-
-
-                            int entityX, entityY, w, h;
-                            SDL_Rect *dstRect = visibility.getDstRect();
-                            entityX = dstRect->x;
-                            entityY = dstRect->y;
-                            w = dstRect->w;
-                            h = dstRect->h;
+                        if (auto actionP = entity->getComponent<Action>()) {
+                            auto &action = *actionP;
+                            auto visibilityP = entity->getComponent<Visibility>();
                             auto buttonKindP = entity->getComponent<Kind>();
+                            int entityX, entityY, w, h;
+                            if (visibilityP) {
+                                SDL_Rect *dstRect = visibilityP->getDstRect();
+                                entityX = dstRect->x;
+                                entityY = dstRect->y;
+                                w = dstRect->w;
+                                h = dstRect->h;
+                            } else {
+                                if (buttonKindP->value == SELL_TOWER and gameData.selected and !gameData.isDragging) {
+                                    entityX = 4;
+                                    entityY = 446;
+                                    w = 138;
+                                    h = 21;
+                                } else continue;
+                            }
+
                             if (action.actionType == CLICK and buttonKindP->value >= UPGRADE_PATH_1 and
                                 buttonKindP->value <= UPGRADE_PATH_3) {
                                 entityX = 4;
@@ -91,7 +113,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                     }
 
                                     case CLICK: {
-                                        if (entity->getComponent<Visibility>()->hidden)
+                                        if (visibilityP and visibilityP->hidden)
                                             break;
                                         switch (buttonKindP->value) {
                                             case PLAY_FAST_FORWARD: {
@@ -102,7 +124,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                 auto[texture, surface] = gameData.getTexture(
                                                         std::string("FastForward") +
                                                         (gameData.FPS == 180 ? "Enabled" : ""));
-                                                visibility.reloadTexture(texture,surface);
+                                                entity->getComponent<Visibility>()->reloadTexture(texture, surface);
                                                 break;
                                             }
                                             case NEXT_STRATEGY: {
@@ -219,6 +241,21 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                 path.erase(path.begin());
                                                 break;
                                             }
+                                            case SELL_TOWER: {
+                                                gameData.cash+=int(gameData.selected->getComponent<Cost>()->value * 0.75);
+                                                gameData.selected->addComponent<RemoveEntityEvent>();
+                                                auto [selectedX,selectedY] = gameData.selected->getComponent<Position>()->value;
+                                                for (int x = std::max(int(selectedX) - 20, 0);
+                                                     x < std::min(int(selectedX) + 21, MAP_WIDTH); ++x) {
+                                                    for (int y = std::max(int(selectedY) - 20, 0);
+                                                         y < std::min(int(selectedY) + 21, MAP_HEIGHT); ++y) {
+                                                        if (gameData.mapData[x][y] == TOWER)
+                                                            gameData.mapData[x][y] = FREE;
+                                                    }
+                                                }
+                                                gameData.selected.reset();
+                                                break;
+                                            }
                                         }
                                         goto entityClicked;
                                     }
@@ -277,8 +314,6 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                 }
                 break;
             }
-            default:
-                break;
         }
     }
 

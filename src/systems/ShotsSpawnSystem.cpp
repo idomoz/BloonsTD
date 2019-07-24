@@ -97,16 +97,18 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                             auto[velocityX, velocityY] = polarToCartesian(shotAngle, getSpeed(shot));
                             shot->addComponent<Velocity>(velocityX, velocityY);
                             shot->addComponent<Range>(5);
-                            if (auto spreadP = entity->getComponent<Spread>()) {
+                            if (auto spreadP = entity->getComponent<Spread>())
                                 shot->addComponent<Spread>(*spreadP);
-                                if (auto gooP = entity->getComponent<Goo>())
-                                    shot->addComponent<Goo>(*gooP);
-                            }
+                            if (auto gooP = entity->getComponent<Goo>())
+                                shot->addComponent<Goo>(*gooP);
+
+                            if (entity->getComponent<MoabClassAffecting>())
+                                shot->addComponent<MoabClassAffecting>();
                             shot->addComponents(pierce, damage, distance);
                             if (camoP)
                                 shot->addComponent<Camo>();
                             shot->addComponent<PoppedBloons>();
-                            auto[texture,surface] = gameData.getTexture(getSurfaceName(shot));
+                            auto[texture, surface] = gameData.getTexture(getSurfaceName(shot));
                             float scale = 1;
                             switch (shotKind.value) {
                                 case MISSILE:
@@ -170,7 +172,7 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
                             shot->addComponent<Range>(5);
                             shot->addComponents(pierce, damage, distance);
                             shot->addComponent<PoppedBloons>();
-                            auto [texture,surface] = gameData.getTexture(getSurfaceName(shot));
+                            auto[texture, surface] = gameData.getTexture(getSurfaceName(shot));
                             int scale = 1;
                             switch (shotKind.value) {
                                 case TACK:

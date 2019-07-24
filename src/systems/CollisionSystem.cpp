@@ -68,6 +68,17 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
     std::vector<std::tuple<EntityP, EntityP, float>> collided;
     int bloonIndex = 0;
     for (auto &shot : shotsLayer) {
+        switch (shot->getComponent<Kind>()->value) {
+            case GOO_SPLASH:
+            case BOMB_EXPLOSION:
+            case MISSILE_EXPLOSION:
+            case ENHANCED_BOMB_EXPLOSION:
+            case MOAB_MAULER_EXPLOSION:
+            case MOAB_ASSASSIN_EXPLOSION:
+            case MOAB_ELIMINATOR_EXPLOSION:
+                shot->addComponent<RemoveEntityEvent>();
+                break;
+        }
         int collidedIndex = collided.size();
         auto[shotPosition, poppedBloons] = shot->getComponents<Position, PoppedBloons>().value();
         auto[shotX, shotY] = shotPosition.value;
@@ -144,7 +155,6 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                 case MOAB_ASSASSIN_EXPLOSION:
                 case MOAB_ELIMINATOR_EXPLOSION: {
                     bool breakFlag = false;
-                    shot->addComponent<RemoveEntityEvent>();
                     switch (kind.value) {
                         case BOMB_EXPLOSION:
                         case MISSILE_EXPLOSION:
@@ -152,12 +162,13 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                             if (bloonKind == BLACK_BLOON or bloonKind == ZEBRA_BLOON)
                                 breakFlag = true;
                             break;
+
                     }
                     if (breakFlag)
                         break;
                     auto shotGooP = shot->getComponent<Goo>();
                     if (shotGooP and (bloonKind < MOAB or shot->getComponent<MoabClassAffecting>()))
-                        bloon->addComponent<Goo>(*shotGooP);
+                        bloon->addComponent<Goo>(STUN, bloonKind < MOAB ? shotGooP->ttl : 45, 0, true);
                     int _damage = damage.value;
                     if (bloonKind >= MOAB)
                         switch (kind.value) {
@@ -185,12 +196,11 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                     bloon->addComponent<DamageEvent>(damage.value, shot);
                     if (bloonKind < MOAB and !bloon->getComponent<Goo>()) {
                         bloon->addComponent<Goo>(*shot->getComponent<Goo>());
-                        auto [texture,surface] = gameData.getTexture(getSurfaceName(bloon));
+                        auto[texture, surface] = gameData.getTexture(getSurfaceName(bloon));
                         auto &visibility = *bloon->getComponent<Visibility>();
                         visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
                         visibility.reloadTexture(texture, surface);
                     }
-                    shot->addComponent<RemoveEntityEvent>();
                     break;
                 }
                 case BOMB:
@@ -221,11 +231,13 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                             explosion->addComponent<Goo>(*shot->getComponent<Goo>());
                             break;
                     }
+                    if (shot->getComponent<MoabClassAffecting>())
+                        explosion->addComponent<MoabClassAffecting>();
                     explosion->addComponent<Pierce>(pierce);
                     explosion->addComponent<PoppedBloons>();
                     explosion->addComponent<Range>(shot->getComponent<Spread>()->value);
                     explosion->addComponents(damage);
-                    auto [texture,surface] = gameData.getTexture(getSurfaceName(explosion));
+                    auto[texture, surface] = gameData.getTexture(getSurfaceName(explosion));
                     explosion->addComponent<Visibility>(texture, surface, SDL_Rect{0, 0, surface->w / 2});
                     layers[SHOTS_LAYER].emplace_back(explosion);
                     shot->addComponent<RemoveEntityEvent>();

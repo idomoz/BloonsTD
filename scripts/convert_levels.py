@@ -26,7 +26,7 @@ while True:
         with open(f'assets/Levels/level{i}.data', 'wb') as out_file:
             for sequence in level:
                 delay, kind, amount, bps = sequence.split(',')
-                delay = int(delay)
+                delay = int(float(delay) * 60)
                 amount = int(amount)
                 bps = float(bps)
                 kind = kind.split(' ')

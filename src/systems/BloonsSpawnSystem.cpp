@@ -6,14 +6,13 @@
 
 
 void BloonsSpawnSystem::update(Entities *layers, GameData &gameData) {
-    if(!gameData.levelRunning)
+    if (!gameData.levelRunning)
         return;
     for (auto &entity: layers[SEQUENCES_LAYER]) {
         auto[sequence, kind] = entity->getComponents<Sequence, Kind>().value();
-        auto [regrowP,camoP,fortifiedP] = entity->getComponentsP<Regrow,Camo,Fortified>();
+        auto[regrowP, camoP, fortifiedP] = entity->getComponentsP<Regrow, Camo, Fortified>();
         int amount = sequence.getAmountReady();
-        if(amount == SEQUENCE_FINISHED)
-        {
+        if (amount == SEQUENCE_FINISHED) {
             entity->addComponent<RemoveEntityEvent>();
             continue;
         }
@@ -31,10 +30,11 @@ void BloonsSpawnSystem::update(Entities *layers, GameData &gameData) {
             if (fortifiedP)
                 bloon->addComponent<Fortified>();
             bloon->addComponent<Lives>(getBloonProperty<TOTAL_LIVES>(bloon));
-            auto [texture,surface] = gameData.getTexture(getSurfaceName(bloon));
+            auto[texture, surface] = gameData.getTexture(getSurfaceName(bloon));
             bloon->addComponent<Visibility>(texture, surface,
                                             SDL_Rect{0, 0, int(surface->w / 3), int(surface->h / 3)});
-            bloon->addComponent<Range>(std::max(surface->w / 6, surface->h / 6));
+            bloon->addComponent<Range>(kind.value < MOAB ? std::max(surface->w / 6, surface->h / 6) :
+                                       (surface->w / 6.0 + surface->h / 6.0) / 2);
             layers[BLOONS_LAYER].emplace_back(bloon);
         }
     }

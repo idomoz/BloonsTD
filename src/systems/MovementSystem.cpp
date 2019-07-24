@@ -103,7 +103,7 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                             }
                             lives.value = getBloonProperty<TOTAL_LIVES>(entity);
 
-                            auto[texture,surface] = gameData.getTexture(getSurfaceName(entity));
+                            auto[texture, surface] = gameData.getTexture(getSurfaceName(entity));
                             visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
                             visibility.reloadTexture(texture, surface);
                             entity->getComponent<Range>()->value = std::max(surface->w / 6, surface->h / 6);
@@ -113,14 +113,14 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                     auto &pathIndex = *pathIndexP;
                     float speed = getSpeed(entity);
                     if (auto gooP = entity->getComponent<Goo>()) {
-                        if (gooP->kind == CORROSIVE and --gooP->timetoRecharge == 0){
+                        if (gooP->kind == CORROSIVE and --gooP->timetoRecharge == 0) {
                             entity->addComponent<DamageEvent>(gooP->damage, EntityP(nullptr));
                             gooP->timetoRecharge = gooP->interval;
                         }
                         gooP->ttl -= 1;
-                        if (gooP->ttl == 0) {
+                        if (gooP->ttl == 0 and !entity->getComponent<RemoveEntityEvent>()) {
                             entity->removeComponent<Goo>();
-                            auto[texture,surface] = gameData.getTexture(getSurfaceName(entity));
+                            auto[texture, surface] = gameData.getTexture(getSurfaceName(entity));
                             auto &visibility = *entity->getComponent<Visibility>();
                             visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
                             visibility.reloadTexture(texture, surface);
@@ -155,7 +155,6 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                     if (pathIndexP) {
                         gameData.lives -= entity->getComponent<Lives>()->value;
                         if (gameData.lives <= 0) {
-                            gameData.lost = true;
                             gameData.lives = 0;
                         }
 

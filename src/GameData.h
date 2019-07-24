@@ -22,14 +22,13 @@ class GameData {
 public:
     int FPS = 60;
     bool isRunning = true;
-    bool lost = false;
     bool isDragging = false;
-    int cash = 100000;
+    int cash = 800;
     bool levelRunning = false;
     bool levelReady = false;
     int lives = 200;
     int level = 1;
-    int finalLevel = 2;
+    int finalLevel = 100;
     int map = 0;
     float mapScale;
     bool fullscreen;
