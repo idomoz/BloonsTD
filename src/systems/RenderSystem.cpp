@@ -83,10 +83,7 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                             break;
                         case DRAG: {
                             int cost = entity->getComponent<Cost>()->value;
-                            int font = WHITE8;
-                            if (cost > gameData.cash)
-                                font = RED8;
-                            FC_Draw(gameData.fonts[font], gameData.renderer,
+                            FC_Draw(gameData.fonts[WHITE8], gameData.renderer,
                                     (visibilityP->getDstRect()->x +(visibilityP->getDstRect()->w/2)- 50) * gameData.mapScale,
                                     (visibilityP->getDstRect()->y+(visibilityP->getDstRect()->h/2) ) * gameData.mapScale, "$%s",
                                     formatCommas(cost).c_str());
