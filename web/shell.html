@@ -58,6 +58,19 @@
             z-index: 10;
             text-align: center;
             padding: 16px;
+            /* Default content-box sizing would make the rendered width
+               100vw + 32px (padding on both sides) and trigger a stray
+               horizontal scrollbar. */
+            box-sizing: border-box;
+        }
+        /* Inline Share icon — drawn instead of using a unicode glyph
+           because most fonts don't ship the iOS Share codepoint, so it
+           falls back to weird boxes/triangles. */
+        .share-icon {
+            display: inline-block;
+            vertical-align: -3px;
+            width: 16px;
+            height: 16px;
         }
         #welcome h1 {
             font-size: 40px;
@@ -125,7 +138,16 @@
     <div id="ios-tip" hidden>
         <strong>For fullscreen on iPhone</strong>
         <ol>
-            <li>Tap the Share icon <span aria-hidden="true">&#x2BAD;</span> in Safari</li>
+            <li>Tap the Share icon
+                <svg class="share-icon" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                    <path d="M12 3v12"/>
+                    <path d="M7 8l5-5 5 5"/>
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>
+                </svg>
+                in Safari</li>
             <li>Choose <em>Add to Home Screen</em></li>
             <li>Launch the game from the new home-screen icon</li>
         </ol>
@@ -136,40 +158,25 @@
     var welcome = document.getElementById('welcome');
     var playBtn = document.getElementById('play-btn');
 
-    // Capture every AudioContext the page creates. SDL2's Emscripten audio
-    // driver (compiled in via -sUSE_SDL=2) builds its own AudioContext
-    // internally and never publishes it on Module, so Module.SDL2 doesn't
-    // exist for native-SDL2 builds — patching the constructor is the only
-    // reliable way to grab a reference. Must run before {{{ SCRIPT }}}
-    // so the patch is in place before SDL_Init runs.
-    var audioContexts = [];
-    ['AudioContext', 'webkitAudioContext'].forEach(function (name) {
-        var Original = window[name];
-        if (!Original) return;
-        function Patched() {
-            var ctx = new (Function.prototype.bind.apply(
-                Original, [null].concat([].slice.call(arguments))))();
-            audioContexts.push(ctx);
-            return ctx;
-        }
-        Patched.prototype = Original.prototype;
-        window[name] = Patched;
-    });
-
+    // SDL2's Emscripten audio driver exposes its AudioContext as a
+    // global JS var: SDL2.audio.context (the global is created by an
+    // EM_ASM block inside SDL_emscriptenaudio.c, so it lives on window,
+    // not on Module). On iOS WebKit it's born suspended; we resume it
+    // synchronously inside the Play click handler.
     function unlockAllAudio() {
-        audioContexts.forEach(function (ctx) {
-            try {
-                if (ctx.state === 'suspended') ctx.resume();
-                // Some iOS revisions need an actual sample to flush the
-                // audio graph before SFX become audible — a 1-frame silent
-                // buffer does the trick without making any noise.
-                var buf = ctx.createBuffer(1, 1, 22050);
-                var src = ctx.createBufferSource();
-                src.buffer = buf;
-                src.connect(ctx.destination);
-                src.start(0);
-            } catch (e) {}
-        });
+        try {
+            var ctx = (typeof SDL2 !== 'undefined' && SDL2.audio && SDL2.audio.context);
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume();
+            // Some iOS revisions need an actual sample to flush the
+            // audio graph before SFX become audible — a 1-frame silent
+            // buffer does the trick without making any noise.
+            var buf = ctx.createBuffer(1, 1, 22050);
+            var src = ctx.createBufferSource();
+            src.buffer = buf;
+            src.connect(ctx.destination);
+            src.start(0);
+        } catch (e) {}
     }
 
     // Hand the runtime our canvas and silence the default on-page logger
