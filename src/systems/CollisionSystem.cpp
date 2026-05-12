@@ -128,6 +128,8 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                 case LASER:
                     if (bloonKind != PURPLE_BLOON and bloonKind != LEAD_BLOON)
                         bloon->addComponent<DamageEvent>(damage.value, shot);
+                    else if (bloonKind == LEAD_BLOON)
+                        gameData.audio.playMetalHit();
                     break;
                 case PLASMA:
                     if (bloonKind != PURPLE_BLOON)
@@ -144,6 +146,8 @@ void CollisionSystem::update(Entities *layers, GameData &gameData) {
                 case SPIKE:
                     if (bloonKind != LEAD_BLOON)
                         bloon->addComponent<DamageEvent>(damage.value, shot);
+                    else
+                        gameData.audio.playMetalHit();
                     break;
                 case JUGGERNAUT:
                     bloon->addComponent<DamageEvent>(bloonKind == CERAMIC_BLOON ? 5 : damage.value, shot);

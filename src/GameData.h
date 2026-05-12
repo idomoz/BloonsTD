@@ -11,6 +11,7 @@
 #include "Component.h"
 #include "Entity.h"
 #include "Settings.h"
+#include "Audio.h"
 #include "SDL.h"
 #include "SDL_FontCache.h"
 
@@ -43,6 +44,7 @@ public:
     EntityP selected;
     FC_Font* fonts[FONTS_LENGTH];
     EntityP playButton;
+    Audio audio;
     ~GameData();
     std::tuple<SDL_Texture *,SDL_Surface *> getTexture(const std::string &name);
 };

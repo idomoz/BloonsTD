@@ -23,6 +23,7 @@ set(BLOONSTD_SOURCES
         src/Entity.cpp src/Entity.h
         src/Component.h src/System.cpp src/System.h
         src/GameData.cpp src/GameData.h
+        src/Audio.cpp src/Audio.h
         src/Physics.cpp src/Physics.h
         src/Settings.h
         src/components/Visibility.cpp src/components/Visibility.h

@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_gfx boost dylibbundler
+          brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_gfx sdl2_mixer boost dylibbundler
 
       - name: Configure
         run: cmake -S . -B build
@@ -108,6 +108,7 @@ jobs:
             mingw-w64-x86_64-SDL2_image
             mingw-w64-x86_64-SDL2_ttf
             mingw-w64-x86_64-SDL2_gfx
+            mingw-w64-x86_64-SDL2_mixer
             mingw-w64-x86_64-boost
             zip
 

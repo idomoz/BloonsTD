@@ -35,6 +35,9 @@ Game::Game(bool fullscreen, float mapScale) {
     gameData.assets["UpgradesBackground"] = IMG_Load("../assets/upgrade_bar_items.png");
     renderSystem = new RenderSystem();
     renderSystem->init(gameData);
+    // SDL is initialized inside RenderSystem's ctor — safe to bring up audio now.
+    if (gameData.audio.init())
+        gameData.audio.playMusic(MUSIC_MAIN_THEME);
     loadMap();
     std::initializer_list<std::tuple<int, std::string, Point, float>> sprites[]{
             {{MAP,   "map",         {SIDEBAR_WIDTH, 0}, 1}},

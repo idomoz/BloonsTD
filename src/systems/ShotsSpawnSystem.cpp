@@ -64,6 +64,34 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
 
             int amount = attackSpeed.getAmountReady();
             float angle = twoPointsAngle(towerPosition.value, target->getComponent<Position>()->value);
+            // Per-tower-shot SFX, sized by the bomb's "kick". Throttled
+            // per-sound so multiple identical cannons firing in the same frame
+            // don't stack into a wall of noise.
+            if (amount > 0) {
+                switch (shotKind.value) {
+                    case BOMB:
+                        gameData.audio.playThrottled(SFX_EXPLOSION_SMALL, 80);
+                        break;
+                    case ENHANCED_BOMB:
+                    case MISSILE:
+                        gameData.audio.playThrottled(SFX_EXPLOSION_MEDIUM, 80);
+                        break;
+                    case MOAB_MAULER:
+                        gameData.audio.playThrottled(SFX_EXPLOSION_BIG, 80);
+                        break;
+                    case MOAB_ASSASSIN:
+                        gameData.audio.playThrottled(SFX_MOAB_ASSASSIN_MISSILE, 80);
+                        break;
+                    case MOAB_ELIMINATOR:
+                        gameData.audio.playThrottled(SFX_EXPLOSION_HUGE, 80);
+                        break;
+                    case GOO_SHOT:
+                        gameData.audio.playThrottled(SFX_GLUE_SPLATTER, 80);
+                        break;
+                    default:
+                        break;
+                }
+            }
             for (int i = 0; i < amount; ++i) {
                 switch (shotKind.value) {
                     case BOMB:
@@ -145,8 +173,11 @@ void ShotsSpawnSystem::update(Entities *layers, GameData &gameData) {
 
                     case BULLET:
                     case ENHANCED_BULLET: {
-                        if (shotKind.value == BULLET and target->getComponent<Kind>()->value == LEAD_BLOON)
+                        if (shotKind.value == BULLET and target->getComponent<Kind>()->value == LEAD_BLOON) {
+                            // Bullet pings off lead — no damage, just a metallic clink.
+                            gameData.audio.playMetalHit();
                             break;
+                        }
                         EntityP shot(new Entity());
                         shot->addComponent<PoppedBloons>();
                         shot->addComponent<Kind>(shotKind.value);

@@ -64,6 +64,10 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
     if (damage >= lives) {
         gameData.cash += getBloonProperty<YIELD>(bloon);
         bloon->addComponent<RemoveEntityEvent>();
+        if (bloon->getComponent<Kind>()->value >= MOAB)
+            gameData.audio.playSound(SFX_MOAB_DESTROYED);
+        else
+            gameData.audio.playPop();
         return;
     }
     auto &kind = bloon->getComponent<Kind>()->value;
@@ -78,6 +82,11 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
         if (kind >= CERAMIC_BLOON and !didBloonPop(bloon, lives, damage, getBloonProperty<MIN_LIVES>(bloon))) {
             std::tie(texture,surface) = gameData.getTexture(getSurfaceName(bloon));
             visibility.reloadTexture(texture, surface);
+            // Survived damage tick — play the matching impact SFX.
+            if (kind >= MOAB)
+                gameData.audio.playMoabDamage();
+            else
+                gameData.audio.playCeramicHit();
             return;
         }
         if (kind < CERAMIC_BLOON and !didBloonPop(bloon, lives, damage))
@@ -86,6 +95,8 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
     if (kind > PINK_BLOON) {
         gameData.cash += 1;
         bloon->addComponent<RemoveEntityEvent>();
+        // The original bloon "pops" into smaller children — same SFX as a regular pop.
+        gameData.audio.playPop();
     }
     auto[regrowP, camoP, fortifiedP, gooP] = bloon->getComponentsP<Regrow, Camo, Fortified, Goo>();
     switch (kind) {
@@ -103,6 +114,8 @@ void damageBloon(EntityP &bloon, EntityP &shot, int damage, GameData &gameData, 
                 bloon->removeComponent<Goo>();
             gameData.cash += kind - ((fortifiedP ? lives / 2 : lives) - 1);
             kind = (fortifiedP ? lives / 2 : lives) - 1;
+            // Bloon shed at least one colored layer (kind decreased) — pop it.
+            gameData.audio.playPop();
             std::tie(texture,surface) = gameData.getTexture(getSurfaceName(bloon));
             visibility.setDstRect(SDL_Rect{0, 0, surface->w / 3, 0});
             visibility.reloadTexture(texture, surface);

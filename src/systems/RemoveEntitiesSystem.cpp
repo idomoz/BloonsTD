@@ -21,9 +21,12 @@ void RemoveEntitiesSystem::update(Entities *layers, GameData &gameData) {
                 layers[i].end());
     }
     if (layers[SEQUENCES_LAYER].empty() and layers[BLOONS_LAYER].empty()) {
+        bool wasRunning = gameData.levelRunning;
         gameData.levelReady = gameData.levelRunning = false;
         if (gameData.level <= gameData.finalLevel and gameData.lives>0)
             gameData.level += 1;
+        if (wasRunning and gameData.lives > 0 and gameData.level > gameData.finalLevel)
+            gameData.audio.playGameWinOnce();
         auto [texture,surface] = gameData.getTexture("Play");
         gameData.playButton->getComponent<Visibility>()->reloadTexture(texture,surface);
     }

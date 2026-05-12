@@ -23,7 +23,7 @@ endif()
 find_package(Boost REQUIRED COMPONENTS filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
-link_libraries(mingw32 SDL2main SDL2 SDL2_image SDL2_gfx SDL2_ttf)
+link_libraries(mingw32 SDL2main SDL2 SDL2_image SDL2_gfx SDL2_ttf SDL2_mixer)
 
 function(bloonstd_configure_target tgt)
     target_link_libraries(${tgt} ${Boost_LIBRARIES})

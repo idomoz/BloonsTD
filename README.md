@@ -65,6 +65,7 @@ This project depends on:
 * SDL2_image-2.0.5
 * SDL2_gfx-1.0.4
 * SDL2_ttf-2.0.15
+* SDL2_mixer-2.x (MP3 support)
 * Boost-1.17.0
 
 Steps (CLion + CMake):
@@ -82,7 +83,7 @@ Steps (CLion + CMake):
 Install dependencies via Homebrew (Apple Silicon `/opt/homebrew` and Intel
 `/usr/local` are both auto-detected):
 ```bash
-brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_gfx boost
+brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_gfx sdl2_mixer boost
 ```
 
 Build & run:
@@ -144,3 +145,8 @@ Two ways to allow it:
 [`this`]: <https://stackoverflow.com/questions/36519453/setup-boost-in-clion>
 [`releases`]: <https://github.com/idomoz/BloonsTD/releases>
 [`SDL2`]: <https://www.libsdl.org/>
+
+## Theme music
+Music from #Uppbeat (free for Creators!):
+https://uppbeat.io/t/matt-stewart-evans/mischief-makers
+License code: LSFEPVCL2JAJTS2D

@@ -116,6 +116,9 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                         if (gooP->kind == CORROSIVE and --gooP->timetoRecharge == 0) {
                             entity->addComponent<DamageEvent>(gooP->damage, EntityP(nullptr));
                             gooP->timetoRecharge = gooP->interval;
+                            // Sound is left to DamageSystem — corrosive damage
+                            // produces the right per-bloon SFX (pop / ceramic
+                            // clink / moab damage) via the normal damage flow.
                         }
                         gooP->ttl -= 1;
                         if (gooP->ttl == 0 and !entity->getComponent<RemoveEntityEvent>()) {
@@ -156,6 +159,7 @@ void MovementSystem::update(Entities *layers, GameData &gameData) {
                         gameData.lives -= entity->getComponent<Lives>()->value;
                         if (gameData.lives <= 0) {
                             gameData.lives = 0;
+                            gameData.audio.playGameOverOnce();
                         }
 
                     }

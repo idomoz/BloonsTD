@@ -150,6 +150,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                 else {
                                                     gameData.cash -= cost;
                                                     gameData.selected->getComponent<Cost>()->value += cost;
+                                                    gameData.audio.playSound(SFX_UPGRADE);
                                                 }
                                                 int currentPath = buttonKindP->value - UPGRADE_PATH_1;
                                                 if (upgrades.selectedPathUpgrades[currentPath] ==
@@ -244,6 +245,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                             case SELL_TOWER: {
                                                 gameData.cash+=int(gameData.selected->getComponent<Cost>()->value * 0.75);
                                                 gameData.selected->addComponent<RemoveEntityEvent>();
+                                                gameData.audio.playSound(SFX_SELL);
                                                 auto [selectedX,selectedY] = gameData.selected->getComponent<Position>()->value;
                                                 for (int x = std::max(int(selectedX) - 20, 0);
                                                      x < std::min(int(selectedX) + 21, MAP_WIDTH); ++x) {
@@ -285,6 +287,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                     entity->addComponent<Position>(
                                                             dstRect->x - SIDEBAR_WIDTH + dstRect->w / 2,
                                                             dstRect->y + dstRect->h / 2);
+                                                    gameData.audio.playSound(SFX_PLACE);
                                                 }
                                             }
 
@@ -298,6 +301,7 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         auto rangeShadow = new Entity();
                                         rangeShadow->addComponent<RangeShadow>(entity);
                                         newEntities[SHADOW_LAYER].emplace_back(rangeShadow);
+                                        gameData.audio.playSound(SFX_SELECT);
                                         goto entityClicked;
                                     }
                                 }
