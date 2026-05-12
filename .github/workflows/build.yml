@@ -74,11 +74,16 @@ jobs:
           # Re-sign the whole bundle ad-hoc since we modified its contents.
           codesign --force --deep --sign - "$APP"
 
+      - name: Zip with ditto (preserves perms, signatures, xattrs)
+        run: |
+          ditto -c -k --keepParent dist/BloonsTD.app dist/BloonsTD-macos-arm64.zip
+          ls -lh dist/BloonsTD-macos-arm64.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: BloonsTD-macos-arm64
-          path: dist/BloonsTD.app
+          path: dist/BloonsTD-macos-arm64.zip
           if-no-files-found: error
 
   windows:
@@ -140,11 +145,17 @@ jobs:
           echo "Bundled DLLs:"
           ls *.dll | sort
 
+      - name: Zip release tree
+        run: |
+          set -e
+          (cd dist && zip -ry BloonsTD-windows-x64.zip BloonsTD)
+          ls -lh dist/BloonsTD-windows-x64.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: BloonsTD-windows-x64
-          path: dist/BloonsTD
+          path: dist/BloonsTD-windows-x64.zip
           if-no-files-found: error
 
   release:
@@ -154,26 +165,20 @@ jobs:
     # Only release on push to master, never on PRs or manual reruns from forks.
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - name: Download macOS artifact
+      - name: Download macOS zip
         uses: actions/download-artifact@v4
         with:
           name: BloonsTD-macos-arm64
-          path: macos/BloonsTD.app
+          path: .
 
-      - name: Download Windows artifact
+      - name: Download Windows zip
         uses: actions/download-artifact@v4
         with:
           name: BloonsTD-windows-x64
-          path: windows/BloonsTD
+          path: .
 
-      - name: Zip bundles
-        run: |
-          set -e
-          # -y preserves symlinks (dylibbundler may create them);
-          # zip preserves the executable bit on regular files.
-          (cd macos   && zip -ry ../BloonsTD-macos-arm64.zip BloonsTD.app)
-          (cd windows && zip -ry ../BloonsTD-windows-x64.zip  BloonsTD)
-          ls -lh *.zip
+      - name: List zips
+        run: ls -lh *.zip
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2

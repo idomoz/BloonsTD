@@ -36,11 +36,27 @@ platforms on every push to `master` and on every PR:
 
 | Job | Runner | Output artifact |
 | --- | --- | --- |
-| `macos`   | `macos-latest` (Apple Silicon) | `BloonsTD-macos-arm64` — fully bundled via `dylibbundler`, runs on any Mac |
-| `windows` | `windows-latest` + MSYS2/MinGW64 | `BloonsTD-windows-x64` — exe + recursively-resolved MinGW DLLs |
+| `macos`   | `macos-latest` (Apple Silicon) | `BloonsTD-macos-arm64.zip` — `BloonsTD.app` bundled via `dylibbundler`, ad-hoc signed, zipped with `ditto` to preserve permissions and signatures |
+| `windows` | `windows-latest` + MSYS2/MinGW64 | `BloonsTD-windows-x64.zip` — exe + recursively-resolved MinGW DLLs + assets |
 
 Artifacts are uploaded to the workflow run page; download from the Actions tab
 on GitHub.
+
+### Automatic releases
+On every push to `master` (not on PRs or forks), a third `release` job runs
+after both build jobs succeed. It downloads the two zips and publishes them
+as a GitHub Release tagged `build-<run_number>` (marked `prerelease: true`,
+`make_latest: true`). The release body includes:
+
+* the source commit SHA,
+* macOS launch instructions (double-click `BloonsTD.app`; first-run may need
+  `xattr -dr com.apple.quarantine BloonsTD.app` since the bundle is ad-hoc
+  signed, not notarized),
+* Windows launch instructions (`bin\BloonsTD.exe` from the unzipped tree).
+
+The workflow declares `permissions: contents: write` so the release job can
+publish via `softprops/action-gh-release@v2`. Releases are visible on the
+repo's [Releases page][`releases`].
 
 ## How to compile with MinGW for Windows
 This project depends on:
@@ -78,22 +94,51 @@ The game uses `../assets/...` paths relative to the working directory at
 runtime, so launching from inside `build/` resolves correctly to the
 project-root `assets/` folder — no symlinks or copies needed.
 
-### Standalone (redistributable) bundle for macOS
-Produces a self-contained directory that runs on any Apple Silicon Mac without
-Homebrew installed:
+### Standalone `.app` bundle for macOS
+The CI workflow (`.github/workflows/build.yml`) packages the macOS build as a
+proper `BloonsTD.app` so it can be double-clicked from Finder or dragged to
+Applications. To produce one locally:
 ```bash
 brew install dylibbundler          # one-time
 cmake --build build -j8
-mkdir -p dist/BloonsTD/{bin,lib}
-cp build/BloonsTD dist/BloonsTD/bin/
-cp -R assets      dist/BloonsTD/assets
-cd dist/BloonsTD
-dylibbundler -od -b -x bin/BloonsTD -d lib -p '@executable_path/../lib/'
+
+APP=dist/BloonsTD.app
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/lib" "$APP/Contents/assets"
+cp build/BloonsTD "$APP/Contents/MacOS/BloonsTD-bin"
+cp -R assets/.    "$APP/Contents/assets/"
+cat > "$APP/Contents/MacOS/BloonsTD" <<'EOF'
+#!/bin/bash
+cd "$(dirname "$0")"
+exec ./BloonsTD-bin "$@"
+EOF
+chmod +x "$APP/Contents/MacOS/BloonsTD"
+dylibbundler -od -b -x "$APP/Contents/MacOS/BloonsTD-bin" \
+             -d "$APP/Contents/lib" -p '@executable_path/../lib/'
+# (also write Contents/Info.plist — see workflow for the exact contents)
+codesign --force --deep --sign - "$APP"
 ```
-Ship `dist/BloonsTD/`. To launch: `cd dist/BloonsTD/bin && ./BloonsTD`.
-First run on another Mac may trigger Gatekeeper (the binary is ad-hoc signed,
-not notarized); clear quarantine with
-`xattr -dr com.apple.quarantine BloonsTD/`.
+
+#### macOS Gatekeeper notes
+The bundle is **ad-hoc signed** (no Apple Developer ID, no notarization). On a
+freshly-downloaded copy macOS will refuse to load the bundled dylibs with
+errors like:
+
+```
+dyld[…]: Library not loaded: @executable_path/../lib/libSDL2-2.0.0.dylib
+  Reason: code signature in 'libSDL2-2.0.0.dylib' not valid for use in process:
+          library load disallowed by system policy
+```
+
+Two ways to allow it:
+1. **Right-click → Open** the `.app` in Finder. Approve the "unidentified
+   developer" prompt once; the whole bundle is then trusted.
+2. **Strip the quarantine xattr** from the command line (works on either the
+   `.app` or the older directory layout):
+   ```bash
+   xattr -dr com.apple.quarantine BloonsTD.app
+   # or, for the directory layout:
+   xattr -dr com.apple.quarantine BloonsTD/
+   ```
 
 [`this`]: <https://stackoverflow.com/questions/36519453/setup-boost-in-clion>
 [`releases`]: <https://github.com/idomoz/BloonsTD/releases>
