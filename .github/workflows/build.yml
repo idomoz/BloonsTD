@@ -1,0 +1,99 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  macos:
+    name: macOS (arm64) standalone
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_gfx boost dylibbundler
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Package standalone bundle
+        run: |
+          mkdir -p dist/BloonsTD/bin dist/BloonsTD/lib
+          cp build/BloonsTD dist/BloonsTD/bin/
+          cp -R assets      dist/BloonsTD/assets
+          cd dist/BloonsTD
+          dylibbundler -od -b -x bin/BloonsTD -d lib -p '@executable_path/../lib/'
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BloonsTD-macos-arm64
+          path: dist/BloonsTD
+          if-no-files-found: error
+
+  windows:
+    name: Windows (MinGW64)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2 / MinGW64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-SDL2
+            mingw-w64-x86_64-SDL2_image
+            mingw-w64-x86_64-SDL2_ttf
+            mingw-w64-x86_64-SDL2_gfx
+            mingw-w64-x86_64-boost
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Package release tree (exe + runtime DLLs + assets)
+        run: |
+          mkdir -p dist/BloonsTD/bin
+          cp build/BloonsTD.exe dist/BloonsTD/bin/
+          cp -R assets dist/BloonsTD/assets
+          # Copy every MinGW64 DLL the binary depends on (recursively
+          # via ldd) into bin/ so the artifact is self-contained.
+          # Fixpoint loop: keep copying until the dll count stops growing.
+          cd dist/BloonsTD/bin
+          while :; do
+            before=$(ls *.dll 2>/dev/null | wc -l)
+            for exe in *.exe *.dll; do
+              [ -e "$exe" ] || continue
+              ldd "$exe" 2>/dev/null \
+                | awk '/=> \/mingw64/ {print $3}' \
+                | xargs -I{} cp -n "{}" .
+            done
+            after=$(ls *.dll 2>/dev/null | wc -l)
+            [ "$before" = "$after" ] && break
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BloonsTD-windows-x64
+          path: dist/BloonsTD
+          if-no-files-found: error

@@ -16,7 +16,7 @@
 constexpr uint64_t createMask(std::initializer_list<int> types) noexcept {
     uint64_t mask = 0;
     for (int bit : types) {
-        mask |= (uint64_t) pow(2, bit);
+        mask |= (uint64_t) 1 << bit;
     }
     return mask;
 }

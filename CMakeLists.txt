@@ -1,11 +1,53 @@
 cmake_minimum_required(VERSION 3.14)
-project(SDL_Game)
+project(BloonsTD CXX C)
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
-include_directories(include)
-find_package(Boost REQUIRED COMPONENTS filesystem)
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(lib)
-link_libraries(mingw32 SDL2main SDL2 SDL2_image SDL2_gfx SDL2_ttf)
-add_executable(SDL_Game src/SDL_FontCache.c src/SDL_FontCache.h src/main.cpp src/Game.cpp src/Game.h src/Entity.h src/Component.h src/System.h src/systems/RenderSystem.cpp src/systems/RenderSystem.h src/components/Visibility.cpp src/components/Visibility.h src/components/Velocity.cpp src/components/Velocity.h src/systems/MovementSystem.cpp src/systems/MovementSystem.h src/components/Position.h src/components/PathIndex.h src/GameData.h src/components/Sequence.cpp src/components/Sequence.h src/systems/BloonsSpawnSystem.cpp src/systems/BloonsSpawnSystem.h src/GameData.cpp src/components/Action.h src/systems/EventSystem.cpp src/systems/EventSystem.h src/components/Draggable.h src/systems/DraggingSystem.cpp src/systems/DraggingSystem.h src/Settings.h src/systems/RemoveEntitiesSystem.cpp src/systems/RemoveEntitiesSystem.h src/components/MoveEntityEvent.h src/components/RangeShadow.h src/Physics.cpp src/Physics.h src/systems/CollisionSystem.cpp src/systems/CollisionSystem.h src/systems/ShotsSpawnSystem.cpp src/systems/ShotsSpawnSystem.h src/components/IntegerComponents.h src/components/FloatComponents.h src/components/AttackSpeed.h src/components/AttackSpeed.cpp src/components/PoppedBloons.h src/systems/DamageSystem.cpp src/systems/DamageSystem.h src/components/FlagComponents.h src/System.cpp src/Entity.cpp src/components/DamageEvent.h src/systems/MenuSystem.cpp src/systems/MenuSystem.h src/components/Regrow.h src/systems/LoadLevelSystem.cpp src/systems/LoadLevelSystem.h src/components/Goo.h src/components/Upgrades.h src/systems/PopEffectSystem.cpp src/systems/PopEffectSystem.h)
-target_link_libraries(SDL_Game ${Boost_LIBRARIES})
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Sources are shared across platforms; toolchain/dependency wiring is not.
+# Pick the right config based on the host platform.
+if(APPLE)
+    include(${CMAKE_CURRENT_LIST_DIR}/build-macos.cmake)
+elseif(WIN32)
+    include(${CMAKE_CURRENT_LIST_DIR}/build-windows.cmake)
+else()
+    message(FATAL_ERROR
+            "BloonsTD has only been ported to Windows (MinGW) and macOS. "
+            "See README.md.")
+endif()
+
+# Shared source list.
+set(BLOONSTD_SOURCES
+        src/SDL_FontCache.c src/SDL_FontCache.h
+        src/main.cpp
+        src/Game.cpp src/Game.h
+        src/Entity.cpp src/Entity.h
+        src/Component.h src/System.cpp src/System.h
+        src/GameData.cpp src/GameData.h
+        src/Physics.cpp src/Physics.h
+        src/Settings.h
+        src/components/Visibility.cpp src/components/Visibility.h
+        src/components/Velocity.cpp src/components/Velocity.h
+        src/components/Sequence.cpp src/components/Sequence.h
+        src/components/AttackSpeed.cpp src/components/AttackSpeed.h
+        src/components/Position.h src/components/PathIndex.h
+        src/components/Action.h src/components/Draggable.h
+        src/components/MoveEntityEvent.h src/components/RangeShadow.h
+        src/components/IntegerComponents.h src/components/FloatComponents.h
+        src/components/PoppedBloons.h src/components/FlagComponents.h
+        src/components/DamageEvent.h src/components/Regrow.h
+        src/components/Goo.h src/components/Upgrades.h
+        src/systems/RenderSystem.cpp src/systems/RenderSystem.h
+        src/systems/MovementSystem.cpp src/systems/MovementSystem.h
+        src/systems/BloonsSpawnSystem.cpp src/systems/BloonsSpawnSystem.h
+        src/systems/EventSystem.cpp src/systems/EventSystem.h
+        src/systems/DraggingSystem.cpp src/systems/DraggingSystem.h
+        src/systems/RemoveEntitiesSystem.cpp src/systems/RemoveEntitiesSystem.h
+        src/systems/CollisionSystem.cpp src/systems/CollisionSystem.h
+        src/systems/ShotsSpawnSystem.cpp src/systems/ShotsSpawnSystem.h
+        src/systems/DamageSystem.cpp src/systems/DamageSystem.h
+        src/systems/MenuSystem.cpp src/systems/MenuSystem.h
+        src/systems/LoadLevelSystem.cpp src/systems/LoadLevelSystem.h
+        src/systems/PopEffectSystem.cpp src/systems/PopEffectSystem.h)
+
+add_executable(BloonsTD ${BLOONSTD_SOURCES})
+bloonstd_configure_target(BloonsTD)
