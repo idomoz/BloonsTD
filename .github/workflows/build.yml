@@ -28,19 +28,57 @@ jobs:
       - name: Build
         run: cmake --build build -j
 
-      - name: Package standalone bundle
+      - name: Package as .app bundle
+        env:
+          APP: dist/BloonsTD.app
         run: |
-          mkdir -p dist/BloonsTD/bin dist/BloonsTD/lib
-          cp build/BloonsTD dist/BloonsTD/bin/
-          cp -R assets      dist/BloonsTD/assets
-          cd dist/BloonsTD
-          dylibbundler -od -b -x bin/BloonsTD -d lib -p '@executable_path/../lib/'
+          set -e
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/lib" "$APP/Contents/assets"
+          cp build/BloonsTD "$APP/Contents/MacOS/BloonsTD-bin"
+          cp -R assets/.    "$APP/Contents/assets/"
+
+          # Launcher: cd's into MacOS/ so the binary's "../assets/" paths
+          # resolve to Contents/assets/ regardless of how it was invoked
+          # (Finder, `open`, terminal).
+          cat > "$APP/Contents/MacOS/BloonsTD" <<'EOF'
+          #!/bin/bash
+          cd "$(dirname "$0")"
+          exec ./BloonsTD-bin "$@"
+          EOF
+          chmod +x "$APP/Contents/MacOS/BloonsTD"
+
+          # Bundle every non-system dylib into Contents/lib/.
+          dylibbundler -od -b \
+            -x "$APP/Contents/MacOS/BloonsTD-bin" \
+            -d "$APP/Contents/lib" \
+            -p '@executable_path/../lib/'
+
+          # Minimal Info.plist
+          cat > "$APP/Contents/Info.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleName</key><string>BloonsTD</string>
+              <key>CFBundleDisplayName</key><string>BloonsTD</string>
+              <key>CFBundleIdentifier</key><string>com.idomoz.bloonstd</string>
+              <key>CFBundleVersion</key><string>1.0.${{ github.run_number }}</string>
+              <key>CFBundleShortVersionString</key><string>1.0</string>
+              <key>CFBundleExecutable</key><string>BloonsTD</string>
+              <key>CFBundlePackageType</key><string>APPL</string>
+              <key>NSHighResolutionCapable</key><true/>
+          </dict>
+          </plist>
+          EOF
+
+          # Re-sign the whole bundle ad-hoc since we modified its contents.
+          codesign --force --deep --sign - "$APP"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: BloonsTD-macos-arm64
-          path: dist/BloonsTD
+          path: dist/BloonsTD.app
           if-no-files-found: error
 
   windows:
@@ -120,7 +158,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: BloonsTD-macos-arm64
-          path: macos/BloonsTD
+          path: macos/BloonsTD.app
 
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
@@ -131,8 +169,10 @@ jobs:
       - name: Zip bundles
         run: |
           set -e
-          (cd macos   && zip -ry ../BloonsTD-macos-arm64.zip BloonsTD)
-          (cd windows && zip -ry ../BloonsTD-windows-x64.zip BloonsTD)
+          # -y preserves symlinks (dylibbundler may create them);
+          # zip preserves the executable bit on regular files.
+          (cd macos   && zip -ry ../BloonsTD-macos-arm64.zip BloonsTD.app)
+          (cd windows && zip -ry ../BloonsTD-windows-x64.zip  BloonsTD)
           ls -lh *.zip
 
       - name: Create GitHub release
@@ -143,10 +183,11 @@ jobs:
           body: |
             Automated build from commit `${{ github.sha }}`.
 
-            * **macOS (arm64)** — `BloonsTD-macos-arm64.zip`. Self-contained
-              bundle (`dylibbundler`), runs on any Apple Silicon Mac.
-              Launch: `cd BloonsTD/bin && ./BloonsTD`.
-              First run may need `xattr -dr com.apple.quarantine BloonsTD/`.
+            * **macOS (arm64)** — `BloonsTD-macos-arm64.zip`. Unzip and
+              double-click `BloonsTD.app` (or drag it to Applications).
+              Self-contained: all SDL2 / Boost dylibs are bundled.
+              First-run may need `xattr -dr com.apple.quarantine BloonsTD.app`
+              because the bundle is ad-hoc signed (not notarized).
             * **Windows (x64)** — `BloonsTD-windows-x64.zip`. MinGW build with
               all required DLLs bundled in `bin/`. Launch: `bin\BloonsTD.exe`.
           files: |
