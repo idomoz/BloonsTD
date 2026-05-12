@@ -44,4 +44,10 @@ function(bloonstd_configure_target tgt)
     # Emit BloonsTD.html alongside .js/.wasm/.data so a quick local
     # `python -m http.server` works.
     set_target_properties(${tgt} PROPERTIES SUFFIX ".html")
+
+    # Force a re-link when shell.html is edited — Emscripten consumes it via
+    # --shell-file at link time, but CMake doesn't see that as a build input
+    # by default, so the .html output would otherwise stay stale.
+    set_property(TARGET ${tgt} APPEND PROPERTY
+            LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/web/shell.html")
 endfunction()

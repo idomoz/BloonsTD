@@ -36,18 +36,125 @@
             max-width: calc(100vh * 1086 / 511);
             image-rendering: pixelated;
         }
+        /* Welcome overlay covering the canvas until the user taps Play. Two
+           reasons it has to exist:
+             1. iOS Safari (and the Google iOS app, which uses WKWebView and
+                is bound by the same rule) won't let an AudioContext start
+                without a direct user gesture, so SDL2_mixer's context stays
+                suspended forever and no audio plays.
+             2. iOS Safari throttles requestAnimationFrame on a fresh page
+                until first interaction, so the canvas just stays black.
+           One tap on the Play button satisfies both. */
+        #welcome {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            z-index: 10;
+            text-align: center;
+            padding: 16px;
+        }
+        #welcome h1 {
+            font-size: 40px;
+            margin: 0 0 12px;
+            letter-spacing: 2px;
+        }
+        #welcome p {
+            font-size: 16px;
+            opacity: 0.7;
+            margin: 0 0 32px;
+            max-width: 26em;
+        }
+        #play-btn {
+            font: inherit;
+            font-size: 22px;
+            padding: 14px 40px;
+            border: 2px solid #fff;
+            background: transparent;
+            color: #fff;
+            border-radius: 999px;
+            cursor: pointer;
+            -webkit-appearance: none;
+            transition: background 0.15s;
+        }
+        #play-btn:not(:disabled):hover,
+        #play-btn:not(:disabled):active {
+            background: rgba(255, 255, 255, 0.12);
+        }
+        #play-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+        #welcome.hidden { display: none; }
     </style>
 </head>
 <body>
+<div id="welcome">
+    <h1>BloonsTD</h1>
+    <p>Place towers, pop bloons, survive the waves.</p>
+    <button id="play-btn" type="button" disabled>Loading&hellip;</button>
+</div>
 <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
 <script>
+    var welcome = document.getElementById('welcome');
+    var playBtn = document.getElementById('play-btn');
+
     // Hand the runtime our canvas and silence the default on-page logger
     // (Emscripten's stock shell pipes stdout to a <textarea>; we don't want it).
+    // onRuntimeInitialized fires after SDL_Init has run inside main(), so by
+    // that point Module.SDL2.audioContext exists (suspended on iOS) and the
+    // Play button can be enabled — clicking it then synchronously resumes the
+    // context within the user-gesture window.
     var Module = {
         canvas: document.getElementById('canvas'),
         print:    (...args) => console.log(...args),
         printErr: (...args) => console.warn(...args),
+        onRuntimeInitialized: function () {
+            playBtn.disabled = false;
+            playBtn.textContent = 'Click to Play';
+        },
     };
+
+    // Touch input has no hover and a coarse pointer; desktop has at least one
+    // of hover or fine pointer. Used to gate fullscreen so it only kicks in
+    // for iPad/phone, not laptop browsers.
+    function isTouchDevice() {
+        return matchMedia('(hover: none) and (pointer: coarse)').matches;
+    }
+
+    playBtn.addEventListener('click', function () {
+        welcome.classList.add('hidden');
+
+        // Resume the suspended AudioContext synchronously inside the click
+        // handler — must happen within the user-gesture window, otherwise
+        // iOS WebKit refuses. The context is created by SDL_Init (running
+        // inside main(), before onRuntimeInitialized fired), so it always
+        // exists by the time this button is clickable.
+        try {
+            var ctx = Module.SDL2 && Module.SDL2.audioContext;
+            if (ctx && ctx.state === 'suspended') ctx.resume();
+        } catch (e) {}
+
+        // Touch devices only: enter fullscreen so Safari's URL bar and the
+        // home indicator stop squishing the letterboxed canvas. iPad Safari
+        // and Android Chrome implement the Fullscreen API on arbitrary
+        // elements; iPhone Safari only allows it on <video> and will throw
+        // here — that's fine, ignore.
+        if (isTouchDevice()) {
+            var el = document.documentElement;
+            var req = el.requestFullscreen || el.webkitRequestFullscreen;
+            if (req) {
+                try { req.call(el); } catch (e) {}
+            }
+        }
+
+        document.getElementById('canvas').focus();
+    });
 </script>
 {{{ SCRIPT }}}
 </body>
