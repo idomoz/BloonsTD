@@ -7,6 +7,9 @@ on:
     branches: [master]
   workflow_dispatch:
 
+permissions:
+  contents: write   # required by the `release` job to publish a GitHub Release
+
 jobs:
   macos:
     name: macOS (arm64) standalone
@@ -72,24 +75,32 @@ jobs:
 
       - name: Package release tree (exe + runtime DLLs + assets)
         run: |
+          set -e
           mkdir -p dist/BloonsTD/bin
           cp build/BloonsTD.exe dist/BloonsTD/bin/
           cp -R assets dist/BloonsTD/assets
-          # Copy every MinGW64 DLL the binary depends on (recursively
-          # via ldd) into bin/ so the artifact is self-contained.
-          # Fixpoint loop: keep copying until the dll count stops growing.
+
+          # Recursively copy every MinGW64 DLL the binary (and its DLL deps)
+          # need into bin/, so the artifact is self-contained.
           cd dist/BloonsTD/bin
           while :; do
-            before=$(ls *.dll 2>/dev/null | wc -l)
+            before=$(find . -maxdepth 1 -iname '*.dll' | wc -l)
             for exe in *.exe *.dll; do
               [ -e "$exe" ] || continue
-              ldd "$exe" 2>/dev/null \
-                | awk '/=> \/mingw64/ {print $3}' \
-                | xargs -I{} cp -n "{}" .
+              # ldd may fail on some files; tolerate that.
+              deps=$(ldd "$exe" 2>/dev/null | awk '/=> \/mingw64/ {print $3}' || true)
+              for dep in $deps; do
+                cp -n "$dep" . 2>/dev/null || true
+              done
             done
-            after=$(ls *.dll 2>/dev/null | wc -l)
-            [ "$before" = "$after" ] && break
+            after=$(find . -maxdepth 1 -iname '*.dll' | wc -l)
+            if [ "$before" -eq "$after" ]; then
+              break
+            fi
           done
+
+          echo "Bundled DLLs:"
+          ls *.dll | sort
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -97,3 +108,49 @@ jobs:
           name: BloonsTD-windows-x64
           path: dist/BloonsTD
           if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    # Only release on push to master, never on PRs or manual reruns from forks.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: BloonsTD-macos-arm64
+          path: macos/BloonsTD
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: BloonsTD-windows-x64
+          path: windows/BloonsTD
+
+      - name: Zip bundles
+        run: |
+          set -e
+          (cd macos   && zip -ry ../BloonsTD-macos-arm64.zip BloonsTD)
+          (cd windows && zip -ry ../BloonsTD-windows-x64.zip BloonsTD)
+          ls -lh *.zip
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: "Build #${{ github.run_number }}"
+          body: |
+            Automated build from commit `${{ github.sha }}`.
+
+            * **macOS (arm64)** — `BloonsTD-macos-arm64.zip`. Self-contained
+              bundle (`dylibbundler`), runs on any Apple Silicon Mac.
+              Launch: `cd BloonsTD/bin && ./BloonsTD`.
+              First run may need `xattr -dr com.apple.quarantine BloonsTD/`.
+            * **Windows (x64)** — `BloonsTD-windows-x64.zip`. MinGW build with
+              all required DLLs bundled in `bin/`. Launch: `bin\BloonsTD.exe`.
+          files: |
+            BloonsTD-macos-arm64.zip
+            BloonsTD-windows-x64.zip
+          prerelease: true
+          make_latest: true
