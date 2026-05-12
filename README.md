@@ -5,6 +5,9 @@
 ## Preview
 <img src="/assets/preview.gif?raw=true" width="600px">
 
+## Web version
+Play now using the power of WebAssembly! https://idomoz.github.io/BloonsTD/
+
 ## Project layout
 ```
 BloonsTD-master/
