@@ -72,7 +72,7 @@ bool Audio::init() {
             SDL_Log("Failed to load music '%s': %s", p.c_str(), Mix_GetError());
     }
 
-    Mix_VolumeMusic(MIX_MAX_VOLUME / 4);
+    Mix_VolumeMusic(MIX_MAX_VOLUME * 3 / 8);
     Mix_Volume(-1, MIX_MAX_VOLUME / 2);
 
     initialized = true;
