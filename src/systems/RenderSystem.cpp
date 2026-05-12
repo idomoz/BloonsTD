@@ -72,9 +72,7 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                                     int cost = upgradeP.value->cost;
                                     FC_Draw(gameData.fonts[WHITE12], gameData.renderer, 25 * gameData.mapScale,
                                             (68 + path * 135) * gameData.mapScale, upgradeP.value->name.c_str());
-                                    int font = WHITE8;
-                                    if (cost > gameData.cash)
-                                        font = RED8;
+                                    int font = cost > gameData.cash ? RED8 : WHITE8;
                                     FC_Draw(gameData.fonts[font], gameData.renderer, 47 * gameData.mapScale,
                                             (81 + path * 135) * gameData.mapScale, "$%s", formatCommas(cost).c_str());
                                     break;
@@ -83,7 +81,8 @@ void RenderSystem::update(Entities *layers, GameData &gameData) {
                             break;
                         case DRAG: {
                             int cost = entity->getComponent<Cost>()->value;
-                            FC_Draw(gameData.fonts[WHITE8], gameData.renderer,
+                            int font = cost > gameData.cash ? RED8 : WHITE8;
+                            FC_Draw(gameData.fonts[font], gameData.renderer,
                                     (visibilityP->getDstRect()->x +(visibilityP->getDstRect()->w/2)- 50) * gameData.mapScale,
                                     (visibilityP->getDstRect()->y+(visibilityP->getDstRect()->h/2) ) * gameData.mapScale, "$%s",
                                     formatCommas(cost).c_str());
