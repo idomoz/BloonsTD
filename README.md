@@ -52,7 +52,8 @@ as a GitHub Release tagged `build-<run_number>` (marked `prerelease: true`,
 * macOS launch instructions (double-click `BloonsTD.app`; first-run may need
   `xattr -dr com.apple.quarantine BloonsTD.app` since the bundle is ad-hoc
   signed, not notarized),
-* Windows launch instructions (`bin\BloonsTD.exe` from the unzipped tree).
+* Windows launch instructions (double-click `BloonsTD.bat` at the top of
+  the unzipped tree, or run `bin\BloonsTD.exe` directly).
 
 The workflow declares `permissions: contents: write` so the release job can
 publish via `softprops/action-gh-release@v2`. Releases are visible on the

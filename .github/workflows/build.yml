@@ -109,6 +109,7 @@ jobs:
             mingw-w64-x86_64-SDL2_ttf
             mingw-w64-x86_64-SDL2_gfx
             mingw-w64-x86_64-boost
+            zip
 
       - name: Configure
         run: cmake -S . -B build -G Ninja
@@ -144,6 +145,15 @@ jobs:
 
           echo "Bundled DLLs:"
           ls *.dll | sort
+
+      - name: Add top-level launcher
+        run: |
+          set -e
+          # Double-click launcher at the root of the bundle. CRLF line endings
+          # so cmd.exe parses it correctly. `cd /d %~dp0bin` makes the cwd
+          # bin/, which is what the binary expects (assets are at ../assets/).
+          printf '@echo off\r\ncd /d "%%~dp0bin"\r\nstart "" "BloonsTD.exe"\r\n' \
+            > dist/BloonsTD/BloonsTD.bat
 
       - name: Zip release tree
         run: |
@@ -194,7 +204,8 @@ jobs:
               First-run may need `xattr -dr com.apple.quarantine BloonsTD.app`
               because the bundle is ad-hoc signed (not notarized).
             * **Windows (x64)** — `BloonsTD-windows-x64.zip`. MinGW build with
-              all required DLLs bundled in `bin/`. Launch: `bin\BloonsTD.exe`.
+              all required DLLs bundled in `bin/`. Double-click `BloonsTD.bat`
+              at the top level to launch (or run `bin\BloonsTD.exe` directly).
           files: |
             BloonsTD-macos-arm64.zip
             BloonsTD-windows-x64.zip
