@@ -31,7 +31,16 @@ public:
     int level = 1;
     int finalLevel = 100;
     int map = 0;
+    // Source-render scale: every draw multiplies its logical coord by
+    // mapScale so fonts/shapes are rasterised at the canvas-backing
+    // resolution. On Retina/high-DPI screens this ends up larger than the
+    // window-points scale to absorb the OS's backing-store factor.
     float mapScale;
+    // Window-points scale: SDL_GetMouseState returns coords in window
+    // points (NOT physical pixels) on macOS HIGHDPI windows, so mouse
+    // coords are converted to logical 1086-space by dividing by this,
+    // not mapScale. Equal to mapScale on platforms where backingScale=1.
+    float pointsScale = 1.0f;
     bool fullscreen;
     std::vector<char> path;
     char mapData[MAP_WIDTH][MAP_HEIGHT];

@@ -13,11 +13,14 @@ void DraggingSystem::update(Entities *layers, GameData &gameData) {
 #ifdef BLOONSTD_IOS
     float lx, ly;
     SDL_RenderWindowToLogical(gameData.renderer, mouseX, mouseY, &lx, &ly);
-    mouseX = int(lx);
-    mouseY = int(ly);
+    mouseX = int(lx / gameData.mapScale);
+    mouseY = int(ly / gameData.mapScale);
 #else
-    mouseX = int(mouseX / gameData.mapScale);
-    mouseY = int(mouseY / gameData.mapScale);
+    // Points → logical: see EventSystem.cpp. mapScale is the bumped
+    // backing-pixel scale (used for drawing); pointsScale is the
+    // window-points scale that matches what SDL_GetMouseState returns.
+    mouseX = int(mouseX / gameData.pointsScale);
+    mouseY = int(mouseY / gameData.pointsScale);
 #endif
     for (int i = 0; i < N_LAYERS; ++i) {
         for (auto &entity: layers[i]) {

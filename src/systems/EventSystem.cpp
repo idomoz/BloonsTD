@@ -33,15 +33,22 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                 int mouseX, mouseY, originalMouseX;
                 SDL_GetMouseState(&mouseX, &mouseY);
 #ifdef BLOONSTD_IOS
-                // Renderer uses logical-size scaling; convert window points
-                // to logical (game) coordinates.
+                // Renderer uses logical-size scaling sized to backing
+                // pixels (see RenderSystem::init iOS branch). RenderWindowToLogical
+                // gives coords in that backing-resolution logical space;
+                // divide by mapScale to land back in 1086-space.
                 float lx, ly;
                 SDL_RenderWindowToLogical(gameData.renderer, mouseX, mouseY, &lx, &ly);
-                mouseX = originalMouseX = int(lx);
-                mouseY = int(ly);
+                mouseX = originalMouseX = int(lx / gameData.mapScale);
+                mouseY = int(ly / gameData.mapScale);
 #else
-                mouseX = originalMouseX = int(mouseX / gameData.mapScale);
-                mouseY = int(mouseY / gameData.mapScale);
+                // SDL_GetMouseState returns window-relative coords in
+                // points (HIGHDPI window = 1 point != 1 backing pixel),
+                // so divide by pointsScale to get logical 1086-space —
+                // mapScale was bumped by the Retina backing factor for
+                // sharp drawing and would over-shrink mouse coords.
+                mouseX = originalMouseX = int(mouseX / gameData.pointsScale);
+                mouseY = int(mouseY / gameData.pointsScale);
 #endif
                 bool entityClicked = false;
                 Entities newEntities[N_LAYERS];
@@ -358,11 +365,13 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
 #ifdef BLOONSTD_IOS
                 float lx, ly;
                 SDL_RenderWindowToLogical(gameData.renderer, mouseX, mouseY, &lx, &ly);
-                mouseX = int(lx);
-                mouseY = int(ly);
+                mouseX = int(lx / gameData.mapScale);
+                mouseY = int(ly / gameData.mapScale);
 #else
-                mouseX = int(mouseX / gameData.mapScale);
-                mouseY = int(mouseY / gameData.mapScale);
+                // See MOUSEBUTTONDOWN comment — mouse comes in points,
+                // not bumped backing pixels.
+                mouseX = int(mouseX / gameData.pointsScale);
+                mouseY = int(mouseY / gameData.pointsScale);
 #endif
 
                 EntityP dragged;

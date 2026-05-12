@@ -77,25 +77,75 @@ void RenderSystem::init(GameData &gameData) {
                                        SDL_WINDOW_FULLSCREEN | SDL_WINDOW_ALLOW_HIGHDPI |
                                        SDL_WINDOW_BORDERLESS);
 #else
+    // Window dimensions are picked in screen "points" — what the user
+    // perceives as the window's size — so mapScale at this stage is the
+    // points-space scale (default 1.5 on macOS). After the renderer is
+    // created we read the backing-pixel/points ratio (Retina = 2.0,
+    // standard = 1.0) and bump gameData.mapScale by it so the source
+    // render lands in backing pixels — eliminating the OS bilinear
+    // upscale that made text and shapes blurry on Retina.
+    // SDL_WINDOW_ALLOW_HIGHDPI is what makes the renderer expose the
+    // high-DPI backing in the first place.
+    //
+    // Emscripten is excluded from both: main.cpp already computes
+    // mapScale from canvas physical pixels, the SDL2 emscripten port
+    // doesn't implement HIGHDPI semantics, and the bump check would be
+    // a no-op anyway (canvas backing == window-size request).
+    gameData.pointsScale = gameData.mapScale;
+    Uint32 winFlags = gameData.fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
+#ifndef __EMSCRIPTEN__
+    winFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
+#endif
     gameData.window = SDL_CreateWindow("BloonsTD", SDL_WINDOWPOS_CENTERED,
                                        SDL_WINDOWPOS_CENTERED, /* NOLINT(hicpp-signed-bitwise)*/
-                                       int((MAP_WIDTH + SIDEBAR_WIDTH + MENU_WIDTH) * gameData.mapScale),
-                                       int(MAP_HEIGHT * gameData.mapScale),
-                                       gameData.fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
+                                       int((MAP_WIDTH + SIDEBAR_WIDTH + MENU_WIDTH) * gameData.pointsScale),
+                                       int(MAP_HEIGHT * gameData.pointsScale),
+                                       winFlags);
 #endif
     gameData.renderer = SDL_CreateRenderer(gameData.window, -1, 0);
     SDL_SetRenderDrawColor(gameData.renderer, 255, 255, 255, 255);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
+#if !defined(BLOONSTD_IOS) && !defined(__EMSCRIPTEN__)
+    // Renderer output size is in backing pixels; window size is in points.
+    // Their ratio is the OS's Retina factor (2 on macOS Retina, 1 elsewhere).
+    int outW = 0, outH = 0, winW = 0, winH = 0;
+    SDL_GetRendererOutputSize(gameData.renderer, &outW, &outH);
+    SDL_GetWindowSize(gameData.window, &winW, &winH);
+    if (winW > 0 && outW > winW) {
+        float backingScale = (float) outW / (float) winW;
+        gameData.mapScale *= backingScale;
+    }
+#endif
 #ifdef BLOONSTD_IOS
     int outW = 0, outH = 0;
     SDL_GetRendererOutputSize(gameData.renderer, &outW, &outH);
     SDL_Log("BloonsTD iOS renderer output: %dx%d", outW, outH);
-    // Scale the game's fixed logical canvas to the device screen, with
-    // letterbox bars where the aspect ratios disagree. All game coordinates
-    // continue to use the desktop-native pixel scheme.
-    SDL_RenderSetLogicalSize(gameData.renderer,
-                             MAP_WIDTH + SIDEBAR_WIDTH + MENU_WIDTH,
-                             MAP_HEIGHT);
+    // Scale the game's fixed logical canvas to the device screen with
+    // letterbox bars where the aspect ratios disagree. The trick to
+    // staying sharp is picking the LOGICAL SIZE at backing-pixel
+    // resolution (preserving game aspect) rather than at 1086×511 —
+    // SDL still letterboxes for us, but every glyph and sprite is now
+    // rasterised at native pixel density instead of being bilinear-
+    // upscaled from a 1086-wide source. mapScale absorbs the new
+    // logical:LOGICAL_W ratio so the rest of the renderer keeps drawing
+    // in 1086-space coords (everything is multiplied by mapScale when
+    // drawing). Mouse handling divides by mapScale after
+    // SDL_RenderWindowToLogical to recover 1086-space input coords.
+    constexpr int LOGICAL_W = MAP_WIDTH + SIDEBAR_WIDTH + MENU_WIDTH;
+    constexpr int LOGICAL_H = MAP_HEIGHT;
+    int newLogW, newLogH;
+    // outW/outH = backing pixels. Pick the larger game-aspect rect that
+    // fits inside it; SDL handles the bars outside that rect.
+    if (outW * LOGICAL_H >= outH * LOGICAL_W) {
+        newLogH = outH;
+        newLogW = (outH * LOGICAL_W) / LOGICAL_H;
+    } else {
+        newLogW = outW;
+        newLogH = (outW * LOGICAL_H) / LOGICAL_W;
+    }
+    SDL_RenderSetLogicalSize(gameData.renderer, newLogW, newLogH);
+    gameData.mapScale = (float) newLogW / (float) LOGICAL_W;
+    SDL_Log("BloonsTD iOS logical: %dx%d, mapScale=%.3f", newLogW, newLogH, gameData.mapScale);
 #endif
 
     std::string fontPath = assetPath("LuckiestGuy-Regular.ttf");
