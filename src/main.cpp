@@ -4,10 +4,21 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <algorithm>
 static void emscriptenLoop(void *arg) {
     auto *game = static_cast<Game *>(arg);
-    if (game->running()) game->update();
-    else emscripten_cancel_main_loop();
+    if (!game->running()) {
+        emscripten_cancel_main_loop();
+        return;
+    }
+    // Fast-forward support. Native main() controls speed via SDL_Delay so
+    // doubling/tripling gameData.FPS literally triples the loop rate. In
+    // the browser requestAnimationFrame is locked to the display refresh
+    // (≈60 Hz), so the FPS field can't change the loop rate — run update()
+    // multiple times per frame to match the native speed-up ratio instead.
+    int ticks = std::max(1, game->gameData.FPS / 60);
+    for (int i = 0; i < ticks && game->running(); ++i)
+        game->update();
 }
 #endif
 

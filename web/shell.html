@@ -91,6 +91,30 @@
             cursor: default;
         }
         #welcome.hidden { display: none; }
+        /* iPhone-only Add-to-Home-Screen tip. iPhone Safari refuses to
+           expose Fullscreen API on anything but <video>, and a "Click to
+           Play" tap can't fix that — the URL bar and home indicator will
+           always squeeze the letterboxed canvas. The escape hatch is the
+           Add-to-Home-Screen flow, which honours apple-mobile-web-app-capable
+           and launches the page chrome-less. iPad and Android Chrome have
+           working requestFullscreen, so they don't need this. */
+        #ios-tip {
+            margin-top: 28px;
+            padding: 14px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.45;
+            opacity: 0.85;
+            max-width: 22em;
+        }
+        #ios-tip strong { font-weight: 600; }
+        #ios-tip ol {
+            text-align: left;
+            margin: 8px 0 0;
+            padding-left: 20px;
+        }
+        #ios-tip[hidden] { display: none; }
     </style>
 </head>
 <body>
@@ -98,18 +122,61 @@
     <h1>BloonsTD</h1>
     <p>Place towers, pop bloons, survive the waves.</p>
     <button id="play-btn" type="button" disabled>Loading&hellip;</button>
+    <div id="ios-tip" hidden>
+        <strong>For fullscreen on iPhone</strong>
+        <ol>
+            <li>Tap the Share icon <span aria-hidden="true">&#x2BAD;</span> in Safari</li>
+            <li>Choose <em>Add to Home Screen</em></li>
+            <li>Launch the game from the new home-screen icon</li>
+        </ol>
+    </div>
 </div>
 <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
 <script>
     var welcome = document.getElementById('welcome');
     var playBtn = document.getElementById('play-btn');
 
+    // Capture every AudioContext the page creates. SDL2's Emscripten audio
+    // driver (compiled in via -sUSE_SDL=2) builds its own AudioContext
+    // internally and never publishes it on Module, so Module.SDL2 doesn't
+    // exist for native-SDL2 builds — patching the constructor is the only
+    // reliable way to grab a reference. Must run before {{{ SCRIPT }}}
+    // so the patch is in place before SDL_Init runs.
+    var audioContexts = [];
+    ['AudioContext', 'webkitAudioContext'].forEach(function (name) {
+        var Original = window[name];
+        if (!Original) return;
+        function Patched() {
+            var ctx = new (Function.prototype.bind.apply(
+                Original, [null].concat([].slice.call(arguments))))();
+            audioContexts.push(ctx);
+            return ctx;
+        }
+        Patched.prototype = Original.prototype;
+        window[name] = Patched;
+    });
+
+    function unlockAllAudio() {
+        audioContexts.forEach(function (ctx) {
+            try {
+                if (ctx.state === 'suspended') ctx.resume();
+                // Some iOS revisions need an actual sample to flush the
+                // audio graph before SFX become audible — a 1-frame silent
+                // buffer does the trick without making any noise.
+                var buf = ctx.createBuffer(1, 1, 22050);
+                var src = ctx.createBufferSource();
+                src.buffer = buf;
+                src.connect(ctx.destination);
+                src.start(0);
+            } catch (e) {}
+        });
+    }
+
     // Hand the runtime our canvas and silence the default on-page logger
-    // (Emscripten's stock shell pipes stdout to a <textarea>; we don't want it).
-    // onRuntimeInitialized fires after SDL_Init has run inside main(), so by
-    // that point Module.SDL2.audioContext exists (suspended on iOS) and the
-    // Play button can be enabled — clicking it then synchronously resumes the
-    // context within the user-gesture window.
+    // (Emscripten's stock shell pipes stdout to a <textarea>; we don't
+    // want it). onRuntimeInitialized fires after SDL_Init has run inside
+    // main(), so by that point SDL_mixer has constructed its AudioContext
+    // (suspended on iOS) and the Play button can be enabled.
     var Module = {
         canvas: document.getElementById('canvas'),
         print:    (...args) => console.log(...args),
@@ -120,31 +187,40 @@
         },
     };
 
-    // Touch input has no hover and a coarse pointer; desktop has at least one
-    // of hover or fine pointer. Used to gate fullscreen so it only kicks in
-    // for iPad/phone, not laptop browsers.
+    // Touch input has no hover and a coarse pointer; desktop has at least
+    // one of hover or fine pointer. Used to gate fullscreen so it only
+    // kicks in for iPad/phone, not laptop browsers.
     function isTouchDevice() {
         return matchMedia('(hover: none) and (pointer: coarse)').matches;
+    }
+
+    // iPhone (not iPad) detection. iPadOS 13+ reports Mac in the UA, so
+    // matching just iPhone/iPod here keeps iPad out — iPad Safari already
+    // supports requestFullscreen on arbitrary elements and doesn't need
+    // the Add-to-Home-Screen flow. Skip the tip if already launched from
+    // the home screen (navigator.standalone is the iOS-specific flag).
+    function isIPhoneSafari() {
+        return /iPhone|iPod/.test(navigator.userAgent)
+            && !window.navigator.standalone;
+    }
+    if (isIPhoneSafari()) {
+        document.getElementById('ios-tip').hidden = false;
     }
 
     playBtn.addEventListener('click', function () {
         welcome.classList.add('hidden');
 
-        // Resume the suspended AudioContext synchronously inside the click
-        // handler — must happen within the user-gesture window, otherwise
-        // iOS WebKit refuses. The context is created by SDL_Init (running
-        // inside main(), before onRuntimeInitialized fired), so it always
-        // exists by the time this button is clickable.
-        try {
-            var ctx = Module.SDL2 && Module.SDL2.audioContext;
-            if (ctx && ctx.state === 'suspended') ctx.resume();
-        } catch (e) {}
+        // Synchronous, inside the user-gesture window — iOS WebKit refuses
+        // resume() / requestFullscreen() outside it.
+        unlockAllAudio();
 
         // Touch devices only: enter fullscreen so Safari's URL bar and the
         // home indicator stop squishing the letterboxed canvas. iPad Safari
         // and Android Chrome implement the Fullscreen API on arbitrary
-        // elements; iPhone Safari only allows it on <video> and will throw
-        // here — that's fine, ignore.
+        // elements; iPhone Safari only allows it on <video> so the call
+        // either no-ops or throws — caught and ignored. iPhone users get
+        // the best experience by adding the page to the home screen
+        // (apple-mobile-web-app-capable meta tag handles that).
         if (isTouchDevice()) {
             var el = document.documentElement;
             var req = el.requestFullscreen || el.webkitRequestFullscreen;
