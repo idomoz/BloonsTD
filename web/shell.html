@@ -34,17 +34,21 @@
             width: 100vw;
             max-height: 100vh;
             max-width: calc(100vh * 1086 / 511);
-            image-rendering: pixelated;
+            /* Default browser interpolation (bilinear). The previous
+               "pixelated" was for retro pixel-art games — these assets are
+               cartoon PNGs and TTF text, both of which look jagged and
+               blurry under nearest-neighbour when the canvas backing
+               store doesn't line up with physical pixels. */
         }
-        /* Welcome overlay covering the canvas until the user taps Play. Two
-           reasons it has to exist:
-             1. iOS Safari (and the Google iOS app, which uses WKWebView and
-                is bound by the same rule) won't let an AudioContext start
-                without a direct user gesture, so SDL2_mixer's context stays
-                suspended forever and no audio plays.
-             2. iOS Safari throttles requestAnimationFrame on a fresh page
-                until first interaction, so the canvas just stays black.
-           One tap on the Play button satisfies both. */
+        /* Welcome overlay covering the canvas until the user taps Play.
+           Solves two iOS Safari quirks at once: (1) requestAnimationFrame
+           is throttled on a fresh page until first interaction, so the
+           canvas would otherwise stay black until the user taps; (2) Web
+           Audio's AudioContext is born suspended and only resumes on a
+           user gesture — SDL2's autoResumeAudioContext picks up the
+           bubbled mousedown from the Play button automatically. The
+           overlay also doubles as a Loading… indicator and an iPhone
+           fullscreen tip slot. */
         #welcome {
             position: fixed;
             inset: 0;
@@ -158,32 +162,14 @@
     var welcome = document.getElementById('welcome');
     var playBtn = document.getElementById('play-btn');
 
-    // SDL2's Emscripten audio driver exposes its AudioContext as a
-    // global JS var: SDL2.audio.context (the global is created by an
-    // EM_ASM block inside SDL_emscriptenaudio.c, so it lives on window,
-    // not on Module). On iOS WebKit it's born suspended; we resume it
-    // synchronously inside the Play click handler.
-    function unlockAllAudio() {
-        try {
-            var ctx = (typeof SDL2 !== 'undefined' && SDL2.audio && SDL2.audio.context);
-            if (!ctx) return;
-            if (ctx.state === 'suspended') ctx.resume();
-            // Some iOS revisions need an actual sample to flush the
-            // audio graph before SFX become audible — a 1-frame silent
-            // buffer does the trick without making any noise.
-            var buf = ctx.createBuffer(1, 1, 22050);
-            var src = ctx.createBufferSource();
-            src.buffer = buf;
-            src.connect(ctx.destination);
-            src.start(0);
-        } catch (e) {}
-    }
-
     // Hand the runtime our canvas and silence the default on-page logger
     // (Emscripten's stock shell pipes stdout to a <textarea>; we don't
-    // want it). onRuntimeInitialized fires after SDL_Init has run inside
-    // main(), so by that point SDL_mixer has constructed its AudioContext
-    // (suspended on iOS) and the Play button can be enabled.
+    // want it). onRuntimeInitialized fires once main() has set up the
+    // window and renderer; that's our cue to enable the Play button.
+    // Audio is unlocked automatically by SDL2's autoResumeAudioContext —
+    // the click on Play bubbles a mousedown to document, which the SDL2
+    // port has registered a listener on, and that synchronously resumes
+    // the suspended context within the user-gesture window.
     var Module = {
         canvas: document.getElementById('canvas'),
         print:    (...args) => console.log(...args),
@@ -216,10 +202,6 @@
 
     playBtn.addEventListener('click', function () {
         welcome.classList.add('hidden');
-
-        // Synchronous, inside the user-gesture window — iOS WebKit refuses
-        // resume() / requestFullscreen() outside it.
-        unlockAllAudio();
 
         // Touch devices only: enter fullscreen so Safari's URL bar and the
         // home indicator stop squishing the letterboxed canvas. iPad Safari

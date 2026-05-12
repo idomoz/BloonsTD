@@ -4,6 +4,8 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <emscripten/html5.h>
+#include "Settings.h"
 #include <algorithm>
 static void emscriptenLoop(void *arg) {
     auto *game = static_cast<Game *>(arg);
@@ -48,7 +50,34 @@ int main(int argc, char *argv[]) {
     // Browser owns the event loop. Heap-allocate Game so it survives main()
     // returning — Emscripten keeps the page alive and drives the registered
     // callback via requestAnimationFrame. fps=0 → use vsync (~60Hz).
-    auto *game = new Game(false, 1.0f);
+    //
+    // Pick mapScale so the SDL canvas backing store matches the canvas's
+    // actual on-screen size in physical pixels. Otherwise the browser
+    // up- or down-samples the rendered frame and produces the blurry
+    // text/sprites most visible on iPhone/iPad.
+    //
+    //   physical px = CSS px (from getBoundingClientRect) × devicePixelRatio
+    //   mapScale    = physical px width / logical game width (1086)
+    //
+    // mapScale=DPR isn't enough on its own: on a wide viewport
+    // (iPad landscape) the canvas CSS width is > 1086, so even at
+    // backing=1086*DPR the browser still has to upscale. Computing from
+    // the live canvas size handles every viewport correctly.
+    //
+    // Mouse/touch coords stay correct because SDL on emscripten reports
+    // them in canvas-internal-pixel space, and EventSystem already
+    // divides by mapScale to get logical coords.
+    double cssW = 0, cssH = 0;
+    emscripten_get_element_css_size("#canvas", &cssW, &cssH);
+    double dpr = emscripten_get_device_pixel_ratio();
+    if (!(dpr >= 1.0 && dpr <= 4.0)) dpr = 1.0;
+    constexpr int LOGICAL_W = MAP_WIDTH + SIDEBAR_WIDTH + MENU_WIDTH;
+    float mapScale = cssW > 0 ? (float)(cssW * dpr / LOGICAL_W) : (float)dpr;
+    // Clamp: <1 would render below logical resolution; >4 wastes memory
+    // (4× == 16× pixel count) without visible benefit.
+    if (mapScale < 1.0f) mapScale = 1.0f;
+    if (mapScale > 4.0f) mapScale = 4.0f;
+    auto *game = new Game(false, mapScale);
     std::cout << "Game loaded!" << std::endl;
     emscripten_set_main_loop_arg(emscriptenLoop, game, 0, 1);
 #else

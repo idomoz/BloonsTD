@@ -348,15 +348,22 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                     break;
                 int mouseX, mouseY;
                 SDL_GetMouseState(&mouseX, &mouseY);
-                // Logical-coord conversion is needed wherever the renderer
-                // uses logical-size scaling (iOS native and Emscripten with
-                // the letterboxed canvas). On desktop the path never
-                // reaches here (touch events don't fire), so the iOS path
-                // is the right one to use unconditionally.
+                // Convert window pixels to logical game coords. Same split
+                // as MOUSEBUTTONDOWN above: iOS native sets a logical-size
+                // renderer, Emscripten/desktop don't (they pre-scale every
+                // draw by mapScale), so coord conversion has to match.
+                // SDL_RenderWindowToLogical is a no-op without logical-size,
+                // so on web it'd leave coords in physical-pixel space and
+                // the on-map check below would fail for every drop.
+#ifdef BLOONSTD_IOS
                 float lx, ly;
                 SDL_RenderWindowToLogical(gameData.renderer, mouseX, mouseY, &lx, &ly);
                 mouseX = int(lx);
                 mouseY = int(ly);
+#else
+                mouseX = int(mouseX / gameData.mapScale);
+                mouseY = int(mouseY / gameData.mapScale);
+#endif
 
                 EntityP dragged;
                 for (auto &entity: layers[MENU_LAYER]) {
