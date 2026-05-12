@@ -6,6 +6,7 @@
 #define SDL2_GAME_ENTITY_H
 
 #include <bitset>
+#include <cstdint>
 #include <vector>
 #include <array>
 #include <cmath>

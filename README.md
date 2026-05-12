@@ -17,13 +17,14 @@ BloonsTD-master/
 Both platforms compile from the same `src/`. The top-level `CMakeLists.txt`
 detects the host platform and `include()`s the matching `build-*.cmake`.
 
-Two minor source tweaks were applied for Apple Clang compatibility; both are
-cross-platform safe and still compile cleanly with MinGW:
+A few minor source tweaks were needed for portability; all are cross-platform
+safe and compile cleanly with both Apple Clang and MinGW:
 
 | File | Change | Reason |
 | --- | --- | --- |
-| `src/Game.h` | Removed `#include <comdef.h>` | Windows-only COM header — was never used |
+| `src/Game.h` | Removed `#include <comdef.h>` | Windows-only COM header — was never used; broke Apple Clang. |
 | `src/Entity.h` | `pow(2, bit)` → `(uint64_t)1 << bit` | Apple Clang's `libc++` enforces strict `constexpr`; `std::pow` is not `constexpr`. Bit-shift is equivalent. |
+| `src/Entity.h` | Added `#include <cstdint>` | Required by newer MinGW/libstdc++ to pull in `uint64_t`; Apple Clang's libc++ exposed it transitively. |
 
 ## How to play (pre-built Windows release)
 * Go to the [`releases`] page and download `BloonsTD.7z`

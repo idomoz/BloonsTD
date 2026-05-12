@@ -13,7 +13,6 @@
 
 #include "SDL.h"
 #include "SDL_image.h"
-#include <comdef.h>
 #include "Entity.h"
 #include "System.h"
 #include "systems/RenderSystem.h"
