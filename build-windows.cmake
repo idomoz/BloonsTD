@@ -20,11 +20,10 @@ if(SDL2_SYS_INCLUDE_DIR)
     include_directories(${SDL2_SYS_INCLUDE_DIR})
 endif()
 
-find_package(Boost REQUIRED COMPONENTS filesystem)
-include_directories(${Boost_INCLUDE_DIRS})
-
-link_libraries(mingw32 SDL2main SDL2 SDL2_image SDL2_gfx SDL2_ttf SDL2_mixer)
+# SDL2_gfx removed — circle primitives are inlined in RenderSystem.cpp so the
+# same code base targets iOS without an extra library. Boost removed —
+# replaced by std::filesystem (C++17).
+link_libraries(mingw32 SDL2main SDL2 SDL2_image SDL2_ttf SDL2_mixer)
 
 function(bloonstd_configure_target tgt)
-    target_link_libraries(${tgt} ${Boost_LIBRARIES})
 endfunction()

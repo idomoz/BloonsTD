@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>BloonsTD</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Letterbox the game canvas: keep its aspect ratio
+           (MAP_WIDTH+SIDEBAR+MENU vs MAP_HEIGHT, see Settings.h),
+           fill whichever viewport dimension is the binding constraint. */
+        #canvas {
+            display: block;
+            background: #000;
+            outline: none;
+            aspect-ratio: 1086 / 511;
+            width: 100vw;
+            max-height: 100vh;
+            max-width: calc(100vh * 1086 / 511);
+            image-rendering: pixelated;
+        }
+    </style>
+</head>
+<body>
+<canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+<script>
+    // Hand the runtime our canvas and silence the default on-page logger
+    // (Emscripten's stock shell pipes stdout to a <textarea>; we don't want it).
+    var Module = {
+        canvas: document.getElementById('canvas'),
+        print:    (...args) => console.log(...args),
+        printErr: (...args) => console.warn(...args),
+    };
+</script>
+{{{ SCRIPT }}}
+</body>
+</html>

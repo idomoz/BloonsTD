@@ -28,8 +28,7 @@
 #include "systems/LoadLevelSystem.h"
 #include "systems/PopEffectSystem.h"
 #include "GameData.h"
-#include "boost/filesystem.hpp"
-#include <iostream>
+#include <filesystem>
 
 struct TempPoint {
     short X;

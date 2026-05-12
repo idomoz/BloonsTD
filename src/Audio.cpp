@@ -1,4 +1,5 @@
 #include "Audio.h"
+#include "Assets.h"
 
 #include <cstdlib>
 #include <SDL.h>
@@ -10,33 +11,35 @@ namespace {
     // big waves audible without melting the speakers.
     constexpr unsigned long MIN_POP_GAP_MS = 25;
 
-    const char *SFX_PATHS[SFX_COUNT] = {
-            "../assets/sounds/Pop1.mp3",
-            "../assets/sounds/Pop2.mp3",
-            "../assets/sounds/Pop3.mp3",
-            "../assets/sounds/Pop4.mp3",
-            "../assets/sounds/Place.mp3",
-            "../assets/sounds/Sell.mp3",
-            "../assets/sounds/Upgrade.mp3",
-            "../assets/sounds/Select.mp3",
-            "../assets/sounds/GameOver.mp3",
-            "../assets/sounds/GameWin.mp3",
-            "../assets/sounds/MoabDestroyedBig.mp3",
-            "../assets/sounds/ExplosionSmall.mp3",
-            "../assets/sounds/ExplosionMedium.mp3",
-            "../assets/sounds/ExplosionBig.mp3",
-            "../assets/sounds/ExplosionHuge.mp3",
-            "../assets/sounds/MoabAssassinMissile.mp3",
-            "../assets/sounds/GlueSplatter.mp3",
-            "../assets/sounds/MoabDamage1.mp3",
-            "../assets/sounds/MoabDamage2.mp3",
-            "../assets/sounds/MoabDamage3.mp3",
-            "../assets/sounds/CeramicBloonHit.mp3",
-            "../assets/sounds/MetalBloonHit.mp3",
+    // Path *fragments* relative to the assets root. assetPath() prepends the
+    // platform-specific root at load time.
+    const char *SFX_FILES[SFX_COUNT] = {
+            "sounds/Pop1.mp3",
+            "sounds/Pop2.mp3",
+            "sounds/Pop3.mp3",
+            "sounds/Pop4.mp3",
+            "sounds/Place.mp3",
+            "sounds/Sell.mp3",
+            "sounds/Upgrade.mp3",
+            "sounds/Select.mp3",
+            "sounds/GameOver.mp3",
+            "sounds/GameWin.mp3",
+            "sounds/MoabDestroyedBig.mp3",
+            "sounds/ExplosionSmall.mp3",
+            "sounds/ExplosionMedium.mp3",
+            "sounds/ExplosionBig.mp3",
+            "sounds/ExplosionHuge.mp3",
+            "sounds/MoabAssassinMissile.mp3",
+            "sounds/GlueSplatter.mp3",
+            "sounds/MoabDamage1.mp3",
+            "sounds/MoabDamage2.mp3",
+            "sounds/MoabDamage3.mp3",
+            "sounds/CeramicBloonHit.mp3",
+            "sounds/MetalBloonHit.mp3",
     };
 
-    const char *MUSIC_PATHS[MUSIC_COUNT] = {
-            "../assets/sounds/MainTheme.mp3",
+    const char *MUSIC_FILES[MUSIC_COUNT] = {
+            "sounds/MainTheme.mp3",
     };
 }
 
@@ -57,14 +60,16 @@ bool Audio::init() {
     Mix_AllocateChannels(32);
 
     for (int i = 0; i < SFX_COUNT; ++i) {
-        sfx[i] = Mix_LoadWAV(SFX_PATHS[i]);
+        std::string p = assetPath(SFX_FILES[i]);
+        sfx[i] = Mix_LoadWAV(p.c_str());
         if (!sfx[i])
-            SDL_Log("Failed to load sfx '%s': %s", SFX_PATHS[i], Mix_GetError());
+            SDL_Log("Failed to load sfx '%s': %s", p.c_str(), Mix_GetError());
     }
     for (int i = 0; i < MUSIC_COUNT; ++i) {
-        music[i] = Mix_LoadMUS(MUSIC_PATHS[i]);
+        std::string p = assetPath(MUSIC_FILES[i]);
+        music[i] = Mix_LoadMUS(p.c_str());
         if (!music[i])
-            SDL_Log("Failed to load music '%s': %s", MUSIC_PATHS[i], Mix_GetError());
+            SDL_Log("Failed to load music '%s': %s", p.c_str(), Mix_GetError());
     }
 
     Mix_VolumeMusic(MIX_MAX_VOLUME / 4);

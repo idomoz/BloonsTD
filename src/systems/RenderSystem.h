@@ -8,7 +8,6 @@
 #include <iostream>
 #include "../System.h"
 #include "../GameData.h"
-#include "SDL2_gfxPrimitives.h"
 
 
 

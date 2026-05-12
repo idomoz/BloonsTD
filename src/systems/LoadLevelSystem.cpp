@@ -3,13 +3,14 @@
 //
 
 #include "LoadLevelSystem.h"
+#include "../Assets.h"
 
 void LoadLevelSystem::update(Entities *layers, GameData &gameData) {
     if (gameData.levelReady or gameData.level > gameData.finalLevel or gameData.lives == 0)
         return;
     if (gameData.level != 1)
         gameData.cash += 100 + gameData.level - 1;
-    std::string fileName = "../assets/Levels/level" + std::to_string(gameData.level) + ".data";
+    std::string fileName = assetPath("Levels/level" + std::to_string(gameData.level) + ".data");
     std::ifstream levelFile(fileName, std::ios::binary);
     Sequence_S sequenceS;
     while (levelFile.peek() != EOF) {

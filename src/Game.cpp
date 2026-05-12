@@ -5,34 +5,28 @@
 #include <array>
 
 #include "Game.h"
+#include "Assets.h"
 
-using namespace boost::filesystem;
+namespace fs = std::filesystem;
+
+static void loadDir(GameData &gameData, const std::string &subDir) {
+    fs::path p(assetPath(subDir));
+    for (const auto &entry : fs::directory_iterator(p)) {
+        const auto stem = entry.path().stem().string();
+        gameData.assets[stem] = IMG_Load(entry.path().string().c_str());
+    }
+}
 
 Game::Game(bool fullscreen, float mapScale) {
     gameData.mapScale = mapScale;
     gameData.fullscreen = fullscreen;
-    path p = path("../assets/Bloons");
-    directory_iterator it{p};
-    for (auto &p :it) {
-        gameData.assets[p.path().filename().string().substr(0, p.path().filename().string().length() - 4)] = IMG_Load(
-                p.path().string().c_str());
-    }
-    p = path("../assets/Sprites");
-    it = directory_iterator{p};
-    for (auto &p :it) {
-        gameData.assets[p.path().filename().string().substr(0, p.path().filename().string().length() - 4)] = IMG_Load(
-                p.path().string().c_str());
-    }
-    p = path("../assets/Icons");
-    it = directory_iterator{p};
-    for (auto &p :it) {
-        gameData.assets[p.path().filename().string().substr(0, p.path().filename().string().length() - 4)] = IMG_Load(
-                p.path().string().c_str());
-    }
-    gameData.assets["map"] = IMG_Load("../assets/map0.jpg");
-    gameData.assets["upgrade_bar"] = IMG_Load("../assets/upgrade_bar.png");
-    gameData.assets["menu"] = IMG_Load("../assets/menu.jpg");
-    gameData.assets["UpgradesBackground"] = IMG_Load("../assets/upgrade_bar_items.png");
+    loadDir(gameData, "Bloons");
+    loadDir(gameData, "Sprites");
+    loadDir(gameData, "Icons");
+    gameData.assets["map"] = IMG_Load(assetPath("map0.jpg").c_str());
+    gameData.assets["upgrade_bar"] = IMG_Load(assetPath("upgrade_bar.png").c_str());
+    gameData.assets["menu"] = IMG_Load(assetPath("menu.jpg").c_str());
+    gameData.assets["UpgradesBackground"] = IMG_Load(assetPath("upgrade_bar_items.png").c_str());
     renderSystem = new RenderSystem();
     renderSystem->init(gameData);
     // SDL is initialized inside RenderSystem's ctor — safe to bring up audio now.
@@ -626,12 +620,15 @@ Game::~Game() {
 
 void Game::update() {
     for (auto &system : systems) {
-        system->update(layers.begin(), gameData);
+        // .data() instead of .begin(): on libstdc++ they happen to be the
+        // same raw pointer, but on libc++ (Emscripten) .begin() returns an
+        // iterator wrapper that doesn't convert to Entities*.
+        system->update(layers.data(), gameData);
     }
 }
 
 void Game::loadMap() {
-    std::string fileName = "../assets/map" + std::to_string(gameData.map);
+    std::string fileName = assetPath("map" + std::to_string(gameData.map));
     std::ifstream obstaclesFile(fileName + "_obstacles.data", std::ios::binary);
     int x = 0, y = 0;
     for (int i = 0; i < ceilf(MAP_WIDTH * MAP_HEIGHT / 8.0); ++i) {

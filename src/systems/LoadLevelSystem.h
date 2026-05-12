@@ -4,7 +4,6 @@
 
 #ifndef SDL_GAME_LOADLEVELSYSTEM_H
 #define SDL_GAME_LOADLEVELSYSTEM_H
-#include "boost/filesystem.hpp"
 #include "../System.h"
 
 struct Sequence_S {

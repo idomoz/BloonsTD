@@ -4,15 +4,22 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Sources are shared across platforms; toolchain/dependency wiring is not.
-# Pick the right config based on the host platform.
-if(APPLE)
+# Pick the right config based on the host platform / target SDK.
+# CMAKE_SYSTEM_NAME is set to "iOS" by the iOS toolchain or
+# `-DCMAKE_SYSTEM_NAME=iOS` on the cmake command line.
+# EMSCRIPTEN is set when configuring via `emcmake cmake`.
+if(EMSCRIPTEN)
+    include(${CMAKE_CURRENT_LIST_DIR}/build-emscripten.cmake)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    include(${CMAKE_CURRENT_LIST_DIR}/build-ios.cmake)
+elseif(APPLE)
     include(${CMAKE_CURRENT_LIST_DIR}/build-macos.cmake)
 elseif(WIN32)
     include(${CMAKE_CURRENT_LIST_DIR}/build-windows.cmake)
 else()
     message(FATAL_ERROR
-            "BloonsTD has only been ported to Windows (MinGW) and macOS. "
-            "See README.md.")
+            "BloonsTD has been ported to Windows (MinGW), macOS, iOS, and "
+            "WebAssembly (Emscripten). See README.md.")
 endif()
 
 # Shared source list.
@@ -50,5 +57,10 @@ set(BLOONSTD_SOURCES
         src/systems/LoadLevelSystem.cpp src/systems/LoadLevelSystem.h
         src/systems/PopEffectSystem.cpp src/systems/PopEffectSystem.h)
 
-add_executable(BloonsTD ${BLOONSTD_SOURCES})
+if(CMAKE_SYSTEM_NAME STREQUAL "iOS")
+    # MACOSX_BUNDLE turns the executable into a .app — required on iOS.
+    add_executable(BloonsTD MACOSX_BUNDLE ${BLOONSTD_SOURCES})
+else()
+    add_executable(BloonsTD ${BLOONSTD_SOURCES})
+endif()
 bloonstd_configure_target(BloonsTD)

@@ -2,3 +2,9 @@
 cmake-build-debug
 include
 lib
+build/
+build-ios/
+build-ios-device/
+build-web/
+third_party/
+dist/

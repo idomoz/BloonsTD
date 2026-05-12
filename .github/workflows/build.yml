@@ -9,6 +9,13 @@ on:
 
 permissions:
   contents: write   # required by the `release` job to publish a GitHub Release
+  pages: write      # required by the `pages` job to publish to GitHub Pages
+  id-token: write   # required by actions/deploy-pages OIDC handshake
+
+# Only one Pages deploy at a time, and cancel in-progress runs on master pushes.
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   macos:
@@ -20,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_gfx sdl2_mixer boost dylibbundler
+          brew install cmake sdl2 sdl2_image sdl2_ttf sdl2_mixer dylibbundler
 
       - name: Configure
         run: cmake -S . -B build
@@ -107,9 +114,7 @@ jobs:
             mingw-w64-x86_64-SDL2
             mingw-w64-x86_64-SDL2_image
             mingw-w64-x86_64-SDL2_ttf
-            mingw-w64-x86_64-SDL2_gfx
             mingw-w64-x86_64-SDL2_mixer
-            mingw-w64-x86_64-boost
             zip
 
       - name: Configure
@@ -169,9 +174,113 @@ jobs:
           path: dist/BloonsTD-windows-x64.zip
           if-no-files-found: error
 
+  ios:
+    name: iOS Simulator (arm64) — build verification
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # SDL2 trees are NOT stored in the repo. Cloned fresh per CI run.
+      # `--depth 1 --recursive` pulls SDL_ttf/freetype + SDL_image/zlib etc.
+      # submodules — without --recursive the FreeType configure step fails.
+      - name: Clone SDL2 sources into third_party/
+        run: |
+          set -e
+          mkdir -p third_party
+          git -c advice.detachedHead=false clone --depth 1 --recursive \
+              --branch release-2.30.10 https://github.com/libsdl-org/SDL.git        third_party/SDL
+          git -c advice.detachedHead=false clone --depth 1 --recursive \
+              --branch release-2.8.4   https://github.com/libsdl-org/SDL_image.git  third_party/SDL_image
+          git -c advice.detachedHead=false clone --depth 1 --recursive \
+              --branch release-2.22.0  https://github.com/libsdl-org/SDL_ttf.git    third_party/SDL_ttf
+          git -c advice.detachedHead=false clone --depth 1 --recursive \
+              --branch release-2.8.0   https://github.com/libsdl-org/SDL_mixer.git  third_party/SDL_mixer
+
+      - name: Configure (iOS Simulator, arm64)
+        run: |
+          cmake -S . -B build-ios -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphonesimulator \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+
+      - name: Build
+        run: cmake --build build-ios --config Debug -- -sdk iphonesimulator -quiet
+
+      - name: Zip .app
+        run: |
+          set -e
+          mkdir -p dist
+          (cd build-ios/Debug-iphonesimulator && zip -ry ../../dist/BloonsTD-ios-simulator.zip BloonsTD.app)
+          ls -lh dist/BloonsTD-ios-simulator.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BloonsTD-ios-simulator
+          path: dist/BloonsTD-ios-simulator.zip
+          if-no-files-found: error
+
+  web:
+    name: Web (Emscripten / WebAssembly)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.69
+          actions-cache-folder: emsdk-cache
+
+      - name: Configure
+        run: emcmake cmake -S . -B build-web -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build-web -j
+
+      - name: Stage Pages site
+        run: |
+          set -e
+          mkdir -p dist/web
+          cp build-web/BloonsTD.html dist/web/index.html
+          cp build-web/BloonsTD.js   dist/web/
+          cp build-web/BloonsTD.wasm dist/web/
+          cp build-web/BloonsTD.data dist/web/
+          ls -lh dist/web/
+
+      - name: Upload web bundle as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BloonsTD-web
+          path: dist/web
+          if-no-files-found: error
+
+      - name: Upload Pages artifact
+        # Only the master push needs to publish; PR runs just verify the build.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/web
+
+  pages:
+    name: Deploy web to GitHub Pages
+    needs: [web]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+
   release:
     name: Publish release
-    needs: [macos, windows]
+    needs: [macos, windows, ios, web, pages]
     runs-on: ubuntu-latest
     # Only release on push to master, never on PRs or manual reruns from forks.
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -188,7 +297,25 @@ jobs:
           name: BloonsTD-windows-x64
           path: .
 
-      - name: List zips
+      - name: Download iOS Simulator zip
+        uses: actions/download-artifact@v4
+        with:
+          name: BloonsTD-ios-simulator
+          path: .
+
+      - name: Download Web bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: BloonsTD-web
+          path: web
+
+      - name: Zip web bundle for release
+        run: |
+          set -e
+          (cd web && zip -ry ../BloonsTD-web.zip .)
+          ls -lh BloonsTD-web.zip
+
+      - name: List artifacts
         run: ls -lh *.zip
 
       - name: Create GitHub release
@@ -199,16 +326,26 @@ jobs:
           body: |
             Automated build from commit `${{ github.sha }}`.
 
+            * **Web (play in your browser, including iPad)** — published to
+              GitHub Pages: ${{ needs.pages.outputs.page_url }}
+              Also downloadable as `BloonsTD-web.zip` (host on any static
+              server).
             * **macOS (arm64)** — `BloonsTD-macos-arm64.zip`. Unzip and
               double-click `BloonsTD.app` (or drag it to Applications).
-              Self-contained: all SDL2 / Boost dylibs are bundled.
+              Self-contained: all SDL2 dylibs are bundled.
               First-run may need `xattr -dr com.apple.quarantine BloonsTD.app`
               because the bundle is ad-hoc signed (not notarized).
             * **Windows (x64)** — `BloonsTD-windows-x64.zip`. MinGW build with
               all required DLLs bundled in `bin/`. Double-click `BloonsTD.bat`
               at the top level to launch (or run `bin\BloonsTD.exe` directly).
+            * **iOS Simulator** — `BloonsTD-ios-simulator.zip`. Unsigned
+              `BloonsTD.app` for the iOS Simulator (arm64). Drag onto a
+              running simulator with `xcrun simctl install booted .../BloonsTD.app`,
+              then `xcrun simctl launch booted com.idmozes.BloonsTD`.
           files: |
             BloonsTD-macos-arm64.zip
             BloonsTD-windows-x64.zip
+            BloonsTD-ios-simulator.zip
+            BloonsTD-web.zip
           prerelease: true
           make_latest: true

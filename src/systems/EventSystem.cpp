@@ -32,8 +32,17 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
             case SDL_MOUSEBUTTONDOWN: {
                 int mouseX, mouseY, originalMouseX;
                 SDL_GetMouseState(&mouseX, &mouseY);
+#ifdef BLOONSTD_IOS
+                // Renderer uses logical-size scaling; convert window points
+                // to logical (game) coordinates.
+                float lx, ly;
+                SDL_RenderWindowToLogical(gameData.renderer, mouseX, mouseY, &lx, &ly);
+                mouseX = originalMouseX = int(lx);
+                mouseY = int(ly);
+#else
                 mouseX = originalMouseX = int(mouseX / gameData.mapScale);
                 mouseY = int(mouseY / gameData.mapScale);
+#endif
                 bool entityClicked = false;
                 Entities newEntities[N_LAYERS];
                 for (int i = N_LAYERS - 1; i >= 0; --i) {
@@ -262,6 +271,14 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                         goto entityClicked;
                                     }
                                     case DROP: {
+                                        // Touch input → drop on release (handled in
+                                        // SDL_MOUSEBUTTONUP). Mouse input → drop on this
+                                        // press (click-to-place). SDL marks mouse events
+                                        // synthesised from touches with SDL_TOUCH_MOUSEID,
+                                        // so this works the same on iOS native and on
+                                        // web-served-to-iPad without compile-time gating.
+                                        if (event.button.which == SDL_TOUCH_MOUSEID)
+                                            goto entityClicked;
                                         auto &draggable = *entity->getComponent<Draggable>();
                                         if (draggable.isPlaceable) {
                                             entity->removeComponent<Draggable>();
@@ -282,7 +299,6 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                 if (i == MENU_LAYER) {
                                                     gameData.cash -= entity->getComponent<Cost>()->value;
                                                     entity->addComponent<MoveEntityEvent>(TOWERS_LAYER);
-                                                    auto &visibility = *entity->getComponent<Visibility>();
                                                     SDL_Rect *dstRect = entity->getComponent<Visibility>()->getDstRect();
                                                     entity->addComponent<Position>(
                                                             dstRect->x - SIDEBAR_WIDTH + dstRect->w / 2,
@@ -290,7 +306,6 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                                                     gameData.audio.playSound(SFX_PLACE);
                                                 }
                                             }
-
                                         }
                                         goto entityClicked;
                                     }
@@ -316,6 +331,73 @@ void EventSystem::update(Entities *layers, GameData &gameData) {
                     if (!newEntities[i].empty())
                         layers[i] += newEntities[i];
                 }
+                break;
+            }
+            case SDL_MOUSEBUTTONUP: {
+                // Drag-and-drop placement is touch-only. Mouse users place
+                // towers via a second click (handled in MOUSEBUTTONDOWN's
+                // DROP case), so a mouse release must be ignored here —
+                // otherwise the icon-press → release on the icon itself
+                // would immediately cancel the drag. SDL synthesises mouse
+                // events from touches with SDL_TOUCH_MOUSEID, so this
+                // distinguishes iPad-Safari touch from laptop mouse at
+                // runtime — same binary works on both.
+                if (event.button.which != SDL_TOUCH_MOUSEID)
+                    break;
+                if (!gameData.isDragging)
+                    break;
+                int mouseX, mouseY;
+                SDL_GetMouseState(&mouseX, &mouseY);
+                // Logical-coord conversion is needed wherever the renderer
+                // uses logical-size scaling (iOS native and Emscripten with
+                // the letterboxed canvas). On desktop the path never
+                // reaches here (touch events don't fire), so the iOS path
+                // is the right one to use unconditionally.
+                float lx, ly;
+                SDL_RenderWindowToLogical(gameData.renderer, mouseX, mouseY, &lx, &ly);
+                mouseX = int(lx);
+                mouseY = int(ly);
+
+                EntityP dragged;
+                for (auto &entity: layers[MENU_LAYER]) {
+                    auto actionP = entity->getComponent<Action>();
+                    if (entity->getComponent<Draggable>() and actionP and actionP->actionType == DROP) {
+                        dragged = entity;
+                        break;
+                    }
+                }
+                if (!dragged) {
+                    gameData.isDragging = false;
+                    break;
+                }
+
+                bool onMap = mouseX >= SIDEBAR_WIDTH and mouseX <= SIDEBAR_WIDTH + MAP_WIDTH;
+                bool placeable = dragged->getComponent<Draggable>()->isPlaceable;
+
+                if (onMap and placeable) {
+                    dragged->removeComponent<Draggable>();
+                    dragged->getComponent<Action>()->actionType = SELECT;
+                    for (int x = std::max(mouseX - SIDEBAR_WIDTH - 20, 0);
+                         x < std::min(mouseX - SIDEBAR_WIDTH + 21, MAP_WIDTH); ++x) {
+                        for (int y = std::max(mouseY - 20, 0);
+                             y < std::min(mouseY + 21, MAP_HEIGHT); ++y) {
+                            if (gameData.mapData[x][y] == FREE)
+                                gameData.mapData[x][y] = TOWER;
+                        }
+                    }
+                    gameData.cash -= dragged->getComponent<Cost>()->value;
+                    dragged->addComponent<MoveEntityEvent>(TOWERS_LAYER);
+                    SDL_Rect *dstRect = dragged->getComponent<Visibility>()->getDstRect();
+                    dragged->addComponent<Position>(
+                            dstRect->x - SIDEBAR_WIDTH + dstRect->w / 2,
+                            dstRect->y + dstRect->h / 2);
+                    gameData.audio.playSound(SFX_PLACE);
+                } else {
+                    // Released off the map or on a blocked tile — cancel.
+                    dragged->addComponent<RemoveEntityEvent>();
+                    gameData.selected.reset();
+                }
+                gameData.isDragging = false;
                 break;
             }
         }

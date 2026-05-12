@@ -10,8 +10,15 @@ void DraggingSystem::update(Entities *layers, GameData &gameData) {
         return;
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);
+#ifdef BLOONSTD_IOS
+    float lx, ly;
+    SDL_RenderWindowToLogical(gameData.renderer, mouseX, mouseY, &lx, &ly);
+    mouseX = int(lx);
+    mouseY = int(ly);
+#else
     mouseX = int(mouseX / gameData.mapScale);
     mouseY = int(mouseY / gameData.mapScale);
+#endif
     for (int i = 0; i < N_LAYERS; ++i) {
         for (auto &entity: layers[i]) {
             if (auto components = entity->getComponents<Draggable, Visibility>()) {
